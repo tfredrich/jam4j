@@ -6,6 +6,9 @@ import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
+import java.net.ConnectException;
+import java.net.http.HttpConnectTimeoutException;
+import java.net.http.HttpTimeoutException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +51,10 @@ public class SearchCommand implements Runnable {
             String query = String.join(" ", queryParts);
             ArtifactResolver resolver = new ArtifactResolver(opts.resolveCache());
 
-            if (!opts.quiet) System.out.println("Searching for '" + query + "'...\n");
+            if (!opts.quiet) {
+                System.out.println("Searching for '" + query + "'...\n");
+                System.out.flush();
+            }
             List<ArtifactResolver.SearchResult> results = resolver.search(query,
                 new ArtifactResolver.SearchOptions(max, snapshots, local, !noCentral, opts.extraRepos));
 
@@ -69,6 +75,7 @@ public class SearchCommand implements Runnable {
             if (interactive) {
                 System.out.println("\nEnter number(s) to install (e.g. 1 3), or press Enter to skip:");
                 Scanner scanner = new Scanner(System.in);
+                if (!scanner.hasNextLine()) return;
                 String line = scanner.nextLine().trim();
                 if (line.isEmpty()) return;
 
@@ -95,9 +102,20 @@ public class SearchCommand implements Runnable {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
+            System.err.println("Error: " + describeError(e));
             if (opts.verbose) e.printStackTrace();
             System.exit(1);
         }
+    }
+
+    private String describeError(Exception e) {
+        if (e instanceof HttpConnectTimeoutException || e instanceof HttpTimeoutException) {
+            return "Timed out while searching remote repositories";
+        }
+        if (e instanceof ConnectException) {
+            return "Could not connect while searching remote repositories";
+        }
+        String message = e.getMessage();
+        return message == null || message.isBlank() ? e.getClass().getSimpleName() : message;
     }
 }

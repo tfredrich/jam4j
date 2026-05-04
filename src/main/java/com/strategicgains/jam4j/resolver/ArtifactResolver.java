@@ -23,6 +23,7 @@ import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,6 +42,8 @@ public class ArtifactResolver {
 
     private static final String SEARCH_API = "https://search.maven.org/solrsearch/select";
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(20);
 
     private final RepositorySystem system;
     private final RepositorySystemSession session;
@@ -125,10 +128,12 @@ public class ArtifactResolver {
 
         HttpClient client = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
+            .connectTimeout(CONNECT_TIMEOUT)
             .build();
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .header("Accept", "application/json")
+            .timeout(REQUEST_TIMEOUT)
             .GET()
             .build();
 
@@ -204,8 +209,9 @@ public class ArtifactResolver {
 
         HttpClient client = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
+            .connectTimeout(CONNECT_TIMEOUT)
             .build();
-        HttpResponse<String> response = client.send(request.build(), HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = client.send(request.timeout(REQUEST_TIMEOUT).build(), HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() == 404) {
             return List.of();
         }
