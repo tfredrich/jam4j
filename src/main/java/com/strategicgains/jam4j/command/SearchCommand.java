@@ -27,6 +27,15 @@ public class SearchCommand implements Runnable {
     @Option(names = {"-m", "--max"}, description = "Maximum number of results to return", defaultValue = "20")
     public int max = 20;
 
+    @Option(names = "--snapshots", description = "Include snapshot versions in search results")
+    public boolean snapshots;
+
+    @Option(names = "--local", description = "Include artifacts from the local Maven cache")
+    public boolean local;
+
+    @Option(names = "--no-central", description = "Skip Maven Central and search only local/cache or configured repositories")
+    public boolean noCentral;
+
     @Option(names = {"-p", "--project"}, description = "Project file to use (default: ./project.json)")
     public Path projectFile = Path.of("project.json");
 
@@ -40,7 +49,8 @@ public class SearchCommand implements Runnable {
             ArtifactResolver resolver = new ArtifactResolver(opts.resolveCache());
 
             if (!opts.quiet) System.out.println("Searching for '" + query + "'...\n");
-            List<ArtifactResolver.SearchResult> results = resolver.search(query, max);
+            List<ArtifactResolver.SearchResult> results = resolver.search(query,
+                new ArtifactResolver.SearchOptions(max, snapshots, local, !noCentral, opts.extraRepos));
 
             if (results.isEmpty()) {
                 System.out.println("No results found for: " + query);
@@ -49,10 +59,11 @@ public class SearchCommand implements Runnable {
 
             for (int i = 0; i < results.size(); i++) {
                 ArtifactResolver.SearchResult r = results.get(i);
-                System.out.printf("  [%2d] %-60s %s%n",
+                System.out.printf("  [%2d] %-60s %-24s %s%n",
                     i + 1,
                     r.groupId() + ":" + r.artifactId(),
-                    r.latestVersion());
+                    r.version(),
+                    r.repositoryId());
             }
 
             if (interactive) {
@@ -79,7 +90,6 @@ public class SearchCommand implements Runnable {
                     InstallCommand install = new InstallCommand();
                     install.opts = opts;
                     install.projectFile = projectFile;
-                    install.save = true;
                     install.artifacts = toInstall;
                     install.run();
                 }

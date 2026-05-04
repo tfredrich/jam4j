@@ -17,15 +17,22 @@ import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Element;
 
 public class ArtifactResolver {
 
@@ -37,8 +44,10 @@ public class ArtifactResolver {
 
     private final RepositorySystem system;
     private final RepositorySystemSession session;
+    private final Path cacheDir;
 
     public ArtifactResolver(Path cacheDir) {
+        this.cacheDir = cacheDir;
         this.system = ResolverFactory.newRepositorySystem();
         this.session = ResolverFactory.newSession(system, cacheDir);
     }
@@ -79,6 +88,38 @@ public class ArtifactResolver {
      * Uses the Maven Central Search REST API (Solr-based).
      */
     public List<SearchResult> search(String query, int maxResults) throws Exception {
+        return search(query, new SearchOptions(maxResults, false, false, true, List.of()));
+    }
+
+    public List<SearchResult> search(String query, SearchOptions options) throws Exception {
+        Map<String, SearchResult> results = new LinkedHashMap<>();
+        if (options.includeCentral()) {
+            for (SearchResult result : searchMavenCentral(query, options.maxResults())) {
+                addResult(results, result, options.includeSnapshots());
+            }
+        }
+
+        if (options.includeLocal()) {
+            for (SearchResult result : searchLocalRepository(query)) {
+                addResult(results, result, options.includeSnapshots());
+            }
+        }
+
+        Optional<GroupArtifact> groupArtifact = GroupArtifact.from(query);
+        if (groupArtifact.isPresent()) {
+            for (String repoSpec : options.extraRepoSpecs()) {
+                for (SearchResult result : searchRepositoryMetadata(groupArtifact.get(), repoSpec)) {
+                    addResult(results, result, options.includeSnapshots());
+                }
+            }
+        }
+
+        return results.values().stream()
+            .limit(options.maxResults())
+            .toList();
+    }
+
+    private List<SearchResult> searchMavenCentral(String query, int maxResults) throws Exception {
         String url = SEARCH_API + "?q=" + URLEncoder.encode(query, StandardCharsets.UTF_8)
             + "&rows=" + maxResults + "&wt=json";
 
@@ -98,6 +139,116 @@ public class ArtifactResolver {
         }
 
         return parseSearchResults(response.body());
+    }
+
+    private List<SearchResult> searchLocalRepository(String query) throws IOException {
+        if (!Files.isDirectory(cacheDir)) {
+            return List.of();
+        }
+
+        List<SearchResult> results = new ArrayList<>();
+        try (var paths = Files.walk(cacheDir)) {
+            paths.filter(Files::isDirectory)
+                .map(this::localSearchResult)
+                .flatMap(Optional::stream)
+                .filter(result -> matches(query, result))
+                .forEach(results::add);
+        }
+        return results;
+    }
+
+    private Optional<SearchResult> localSearchResult(Path versionDir) {
+        Path artifactDir = versionDir.getParent();
+        if (artifactDir == null) {
+            return Optional.empty();
+        }
+
+        String artifactId = artifactDir.getFileName().toString();
+        String version = versionDir.getFileName().toString();
+        if (artifactId.isBlank() || version.isBlank()) {
+            return Optional.empty();
+        }
+
+        String expectedPrefix = artifactId + "-" + version;
+        try (var files = Files.list(versionDir)) {
+            boolean hasArtifact = files
+                .map(path -> path.getFileName().toString())
+                .anyMatch(name -> name.startsWith(expectedPrefix) && (name.endsWith(".jar") || name.endsWith(".pom")));
+            if (!hasArtifact) {
+                return Optional.empty();
+            }
+        } catch (IOException e) {
+            return Optional.empty();
+        }
+
+        Path groupPath = cacheDir.relativize(artifactDir).getParent();
+        if (groupPath == null) {
+            return Optional.empty();
+        }
+        String groupId = groupPath.toString().replace(File.separatorChar, '.');
+        return Optional.of(new SearchResult(groupId, artifactId, version, "local"));
+    }
+
+    private List<SearchResult> searchRepositoryMetadata(GroupArtifact artifact, String repoSpec) throws Exception {
+        RepositorySpec repository = RepositorySpec.from(repoSpec);
+        String metadataUrl = repository.url()
+            + artifact.groupId().replace('.', '/')
+            + "/" + artifact.artifactId()
+            + "/maven-metadata.xml";
+
+        HttpRequest.Builder request = HttpRequest.newBuilder()
+            .uri(URI.create(metadataUrl))
+            .header("Accept", "application/xml")
+            .GET();
+        repository.authorization().ifPresent(auth -> request.header("Authorization", auth));
+
+        HttpClient client = HttpClient.newBuilder()
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();
+        HttpResponse<String> response = client.send(request.build(), HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 404) {
+            return List.of();
+        }
+        if (response.statusCode() != 200) {
+            throw new RuntimeException(repository.id() + " metadata returned HTTP " + response.statusCode());
+        }
+
+        List<String> versions = parseMetadataVersions(response.body());
+        List<SearchResult> results = new ArrayList<>();
+        for (int i = versions.size() - 1; i >= 0; i--) {
+            results.add(new SearchResult(artifact.groupId(), artifact.artifactId(), versions.get(i), repository.id()));
+        }
+        return results;
+    }
+
+    static List<String> parseMetadataVersions(String metadataXml) throws Exception {
+        Element root = DocumentBuilderFactory.newInstance()
+            .newDocumentBuilder()
+            .parse(new java.io.ByteArrayInputStream(metadataXml.getBytes(StandardCharsets.UTF_8)))
+            .getDocumentElement();
+        var versionNodes = root.getElementsByTagName("version");
+        List<String> versions = new ArrayList<>();
+        for (int i = 0; i < versionNodes.getLength(); i++) {
+            String version = versionNodes.item(i).getTextContent();
+            if (version != null && !version.isBlank()) {
+                versions.add(version.trim());
+            }
+        }
+        return versions;
+    }
+
+    private boolean matches(String query, SearchResult result) {
+        String normalizedQuery = query.toLowerCase();
+        return result.groupId().toLowerCase().contains(normalizedQuery)
+            || result.artifactId().toLowerCase().contains(normalizedQuery)
+            || result.coord().toLowerCase().contains(normalizedQuery);
+    }
+
+    private void addResult(Map<String, SearchResult> results, SearchResult result, boolean includeSnapshots) {
+        if (!includeSnapshots && result.version().endsWith("-SNAPSHOT")) {
+            return;
+        }
+        results.putIfAbsent(result.coord(), result);
     }
 
     private List<RemoteRepository> buildRepos(List<String> extraRepoSpecs) {
@@ -153,10 +304,54 @@ public class ArtifactResolver {
         return results;
     }
 
-    public record SearchResult(String groupId, String artifactId, String latestVersion, String repositoryId) {
+    public record SearchOptions(
+        int maxResults,
+        boolean includeSnapshots,
+        boolean includeLocal,
+        boolean includeCentral,
+        List<String> extraRepoSpecs) {
+    }
+
+    public record SearchResult(String groupId, String artifactId, String version, String repositoryId) {
         /** Returns the canonical install coordinate: group:artifact:version */
         public String coord() {
-            return groupId + ":" + artifactId + ":" + latestVersion;
+            return groupId + ":" + artifactId + ":" + version;
+        }
+    }
+
+    private record GroupArtifact(String groupId, String artifactId) {
+        private static Optional<GroupArtifact> from(String query) {
+            String[] parts = query.split(":");
+            if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
+                return Optional.empty();
+            }
+            return Optional.of(new GroupArtifact(parts[0], parts[1]));
+        }
+    }
+
+    private record RepositorySpec(String id, String url, Optional<String> authorization) {
+        private static RepositorySpec from(String spec) {
+            int eq = spec.indexOf('=');
+            if (eq > 0 && !spec.startsWith("http")) {
+                String id = spec.substring(0, eq);
+                return new RepositorySpec(id, ensureTrailingSlash(spec.substring(eq + 1)), authHeader(id));
+            }
+            return new RepositorySpec("extra-" + Math.abs(spec.hashCode()), ensureTrailingSlash(spec), Optional.empty());
+        }
+
+        private static Optional<String> authHeader(String id) {
+            String user = System.getenv("JAM_REPO_" + id.toUpperCase() + "_USER");
+            String pass = System.getenv("JAM_REPO_" + id.toUpperCase() + "_PASSWORD");
+            if (user == null || pass == null) {
+                return Optional.empty();
+            }
+            String credentials = java.util.Base64.getEncoder()
+                .encodeToString((user + ":" + pass).getBytes(StandardCharsets.UTF_8));
+            return Optional.of("Basic " + credentials);
+        }
+
+        private static String ensureTrailingSlash(String url) {
+            return url.endsWith("/") ? url : url + "/";
         }
     }
 }

@@ -9,6 +9,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -25,9 +26,6 @@ public class InstallCommand implements Runnable {
 
     @Option(names = {"-p", "--project"}, description = "Project file to use (default: ./project.json)")
     public Path projectFile = Path.of("project.json");
-
-    @Option(names = "--save", description = "Add installed artifacts to project.json dependencies")
-    public boolean save;
 
     @Parameters(description = "Artifacts to install (format: group:artifact:version). If none, installs from project.json.")
     public List<String> artifacts;
@@ -61,18 +59,9 @@ public class InstallCommand implements Runnable {
             if (!opts.quiet) System.out.println("Resolved " + resolved.size() + " JAR(s). Installing to " + opts.libDir + "...");
             installer.install(resolved, opts.libDir, opts.localOnly, opts.quiet);
 
-            if (save && artifacts != null && !artifacts.isEmpty() && Files.exists(projectFile)) {
-                ProjectJson project = ProjectJson.load(projectFile);
-                for (String coord : artifacts) {
-                    String[] parts = coord.split(":");
-                    if (parts.length >= 3) {
-                        String ga = parts[0] + ":" + parts[1];
-                        String ver = parts[parts.length - 1];
-                        project.addDependency(ga, ver);
-                    }
-                }
-                project.save(projectFile);
-                if (!opts.quiet) System.out.println("Updated " + projectFile);
+            if (artifacts != null && !artifacts.isEmpty()) {
+                boolean updated = saveArtifactsToProject(artifacts);
+                if (updated && !opts.quiet) System.out.println("Updated " + projectFile);
             }
 
             if (!opts.quiet) System.out.println("Done.");
@@ -81,5 +70,23 @@ public class InstallCommand implements Runnable {
             if (opts.verbose) e.printStackTrace();
             System.exit(1);
         }
+    }
+
+    boolean saveArtifactsToProject(List<String> artifacts) throws IOException {
+        if (!Files.exists(projectFile)) {
+            return false;
+        }
+
+        ProjectJson project = ProjectJson.load(projectFile);
+        for (String coord : artifacts) {
+            String[] parts = coord.split(":");
+            if (parts.length >= 3) {
+                String ga = parts[0] + ":" + parts[1];
+                String ver = parts[parts.length - 1];
+                project.addDependency(ga, ver);
+            }
+        }
+        project.save(projectFile);
+        return true;
     }
 }
