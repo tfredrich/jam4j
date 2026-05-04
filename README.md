@@ -25,9 +25,10 @@ This repository is an early implementation. The CLI, manifest model, Maven Resol
 mvn test
 mvn package
 java -jar target/jam-1.0.0-SNAPSHOT.jar --help
+java -jar target/jam-1.0.0-SNAPSHOT.jar --version
 ```
 
-`mvn package` builds a shaded standalone JAR with `com.strategicgains.jam4j.Jam` as the entry point.
+`mvn package` builds a shaded standalone JAR with `com.strategicgains.jam4j.Jam` as the entry point. The packaged CLI reports the Maven project version and build timestamp, for example `jam 1.0.0-SNAPSHOT (built 2026-05-04T21:18:42Z)`.
 
 ## Native Executable
 
@@ -38,9 +39,10 @@ source "$HOME/.sdkman/bin/sdkman-init.sh"
 sdk use java 21.0.2-graalce
 mvn -Pnative package
 ./target/jam --help
+./target/jam --version
 ```
 
-The `native` Maven profile uses GraalVM Native Build Tools and produces `target/jam` for the current OS and CPU architecture. Replace `21.0.2-graalce` with the Java 21 GraalVM candidate installed on your machine. Native image builds are platform-specific, so release builds should run once per target platform.
+The `native` Maven profile uses GraalVM Native Build Tools and produces `target/jam` for the current OS and CPU architecture. Replace `21.0.2-graalce` with the Java 21 GraalVM candidate installed on your machine. Native image builds are platform-specific, so release builds should run once per target platform. The native executable uses the same generated version metadata as the shaded JAR.
 
 ## `project.json`
 
@@ -96,7 +98,7 @@ The examples above use the shaded JAR directly. If you install or alias the nati
 The top-level command supports:
 
 - `-h, --help`: show top-level help
-- `-V, --version`: print the CLI version
+- `-V, --version`: print the CLI version and build timestamp
 
 Subcommands print command-specific usage when invocation fails validation, such as an unknown option or missing required argument.
 

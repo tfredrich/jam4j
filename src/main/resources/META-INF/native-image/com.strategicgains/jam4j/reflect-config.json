@@ -1,5 +1,9 @@
 [
   {
+    "name": "com.strategicgains.jam4j.Jam$VersionProvider",
+    "allDeclaredConstructors": true
+  },
+  {
     "name": "com.strategicgains.jam4j.model.ProjectJson",
     "allDeclaredConstructors": true,
     "allPublicFields": true,
