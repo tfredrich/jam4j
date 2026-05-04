@@ -1,0 +1,252 @@
+[
+  {
+    "name": "com.strategicgains.jam4j.model.ProjectJson",
+    "allDeclaredConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "org.apache.maven.repository.internal.DefaultArtifactDescriptorReader",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.apache.maven.repository.internal.DefaultModelCacheFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.apache.maven.repository.internal.DefaultVersionRangeResolver",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.apache.maven.repository.internal.DefaultVersionResolver",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.apache.maven.repository.internal.PluginsMetadataGeneratorFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.apache.maven.repository.internal.SnapshotMetadataGeneratorFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.apache.maven.repository.internal.VersionsMetadataGeneratorFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultArtifactResolver",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultChecksumPolicyProvider",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultDeployer",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultFileProcessor",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultInstaller",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultLocalPathComposer",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultLocalPathPrefixComposerFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultLocalRepositoryProvider",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultMetadataResolver",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultOfflineController",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultRemoteRepositoryManager",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultRepositoryConnectorProvider",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultRepositoryEventDispatcher",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultRepositoryLayoutProvider",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultRepositorySystem",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultRepositorySystemLifecycle",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultTrackingFileManager",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultTransporterProvider",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultUpdateCheckManager",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.DefaultUpdatePolicyAnalyzer",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.EnhancedLocalRepositoryManagerFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.LoggerFactoryProvider",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.Maven2RepositoryLayoutFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.SimpleLocalRepositoryManagerFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.checksum.DefaultChecksumAlgorithmFactorySelector",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.checksum.Md5ChecksumAlgorithmFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.checksum.Sha1ChecksumAlgorithmFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.checksum.Sha256ChecksumAlgorithmFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.checksum.Sha512ChecksumAlgorithmFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.checksum.SparseDirectoryTrustedChecksumsSource",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.checksum.SummaryFileTrustedChecksumsSource",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.checksum.TrustedToProvidedChecksumsSourceAdapter",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.collect.DefaultDependencyCollector",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.collect.bf.BfDependencyCollector",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.collect.df.DfDependencyCollector",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.filter.DefaultRemoteRepositoryFilterManager",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.filter.GroupIdRemoteRepositoryFilterSource",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.filter.PrefixesRemoteRepositoryFilterSource",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.resolution.TrustedChecksumsArtifactResolverPostProcessor",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.slf4j.Slf4jLoggerFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.synccontext.DefaultSyncContextFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.synccontext.legacy.DefaultSyncContextFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.synccontext.named.NamedLockFactoryAdapterFactoryImpl",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.synccontext.named.providers.DiscriminatingNameMapperProvider",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.synccontext.named.providers.FileGAVNameMapperProvider",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.synccontext.named.providers.FileHashingGAVNameMapperProvider",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.synccontext.named.providers.FileStaticNameMapperProvider",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.synccontext.named.providers.GAVNameMapperProvider",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.internal.impl.synccontext.named.providers.StaticNameMapperProvider",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.transport.file.FileTransporterFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.transport.http.HttpTransporterFactory",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.transport.http.Nexus2ChecksumExtractor",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "org.eclipse.aether.transport.http.XChecksumChecksumExtractor",
+    "allDeclaredConstructors": true
+  }
+]
