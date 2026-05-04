@@ -11,6 +11,7 @@ import picocli.CommandLine.Command;
     version = "jam 1.0.0-SNAPSHOT",
     subcommands = {
         SearchCommand.class,
+        InitCommand.class,
         InstallCommand.class,
         PathCommand.class,
         RunCommand.class,

@@ -1,6 +1,7 @@
 package com.strategicgains.jam4j.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -16,6 +17,7 @@ public class ProjectJson {
     public String version;
 
     @JsonProperty("main")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String mainClass;
 
     public Map<String, String> dependencies = new LinkedHashMap<>();
