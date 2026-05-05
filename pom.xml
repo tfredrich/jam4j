@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.strategicgains</groupId>
-    <artifactId>jam</artifactId>
+    <artifactId>jam4j</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>jam</name>
+    <name>jam4j</name>
     <description>Java Artifact Manager — npm-like dependency management for Java</description>
 
     <properties>

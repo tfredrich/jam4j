@@ -23,8 +23,8 @@ This repository is an early implementation. The CLI, manifest model, Maven Resol
 ```bash
 mvn test
 mvn package
-java -jar target/jam-1.0.0-SNAPSHOT.jar --help
-java -jar target/jam-1.0.0-SNAPSHOT.jar --version
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar --help
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar --version
 ```
 
 `mvn package` builds a shaded standalone JAR with `com.strategicgains.jam4j.Jam` as the entry point. The packaged CLI reports the Maven project version and build timestamp, for example `jam 1.0.0-SNAPSHOT (build 2026-05-04T21:18:42Z)`.
@@ -60,23 +60,23 @@ Dependency keys use `group:artifact`; values are versions. At runtime they are r
 After building:
 
 ```bash
-java -jar target/jam-1.0.0-SNAPSHOT.jar search jackson
-java -jar target/jam-1.0.0-SNAPSHOT.jar install com.fasterxml.jackson.core:jackson-databind:2.17.1
-java -jar target/jam-1.0.0-SNAPSHOT.jar path
-java -jar target/jam-1.0.0-SNAPSHOT.jar run --list
-java -jar target/jam-1.0.0-SNAPSHOT.jar run build
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar search jackson
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar install com.fasterxml.jackson.core:jackson-databind:2.17.1
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar path
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar run --list
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar run build
 ```
 
 Convenience commands execute matching scripts from `project.json`:
 
 ```bash
-java -jar target/jam-1.0.0-SNAPSHOT.jar build
-java -jar target/jam-1.0.0-SNAPSHOT.jar test
-java -jar target/jam-1.0.0-SNAPSHOT.jar clean
-java -jar target/jam-1.0.0-SNAPSHOT.jar package
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar build
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar test
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar clean
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar package
 ```
 
-The examples above use the shaded JAR directly. If you install or alias the JAR launcher as `jam`, replace `java -jar target/jam-1.0.0-SNAPSHOT.jar` with `jam`.
+The examples above use the shaded JAR directly. If you install or alias the JAR launcher as `jam`, replace `java -jar target/jam4j-1.0.0-SNAPSHOT.jar` with `jam`.
 
 ## Command Reference
 
@@ -289,7 +289,7 @@ Scripts support cross-platform substitutions:
 Arguments can be passed to scripts with `-a` or `--arg`:
 
 ```bash
-java -jar target/jam-1.0.0-SNAPSHOT.jar run build -a --verbose test -a smoke
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar run build -a --verbose test -a smoke
 ```
 
 ## Repository and Cache Options
