@@ -21,13 +21,11 @@ I want to create a java-based dependency management system that behaves much lik
 | Dependency resolution | `maven-resolver-impl` + `maven-resolver-transport-http` |
 | POM parsing (transitive deps) | `maven-model`, `maven-model-builder` |
 | JSON manifest (`project.json`) | `jackson-databind` |
-| Native binary (fast startup) | GraalVM `native-image` |
 
 Use the **Apache Maven Resolver** (the artifact resolution engine Maven uses internally) is available as a standalone library. Use it directly without embedding all of Maven. That handles the hardest part (transitive dependency resolution, downloading from Maven Central, local cache) and you write only the CLI and JSON manifest layer on top.
 
 - Maven Resolver already handles version conflict resolution, transitive dependency walking, and caching to `~/.m2/repository` — reusing the same cache as Maven/Gradle
-- `picocli` is the standard for Java CLIs and has first-class GraalVM support
-- Compiling to a native binary with GraalVM is critical — `jpm install` needs to feel instant like npm, not wait 2 seconds for JVM startup
+- `picocli` is the standard for Java CLIs
 
 ## Rough `project.json` shape:
 

@@ -11,13 +11,12 @@
 
 ## Project Status
 
-This repository is an early implementation. The CLI, manifest model, Maven Resolver integration, local installation, script execution, basic tests, and native image packaging are present. Broader project-generation workflows remain design goals, not complete product features.
+This repository is an early implementation. The CLI, manifest model, Maven Resolver integration, local installation, script execution, and basic tests are present. Broader project-generation workflows remain design goals, not complete product features.
 
 ## Requirements
 
 - Java 21
 - Maven 3.9 or newer
-- GraalVM for Java 21 with `native-image`, when building the native executable
 
 ## Build and Test
 
@@ -29,20 +28,6 @@ java -jar target/jam-1.0.0-SNAPSHOT.jar --version
 ```
 
 `mvn package` builds a shaded standalone JAR with `com.strategicgains.jam4j.Jam` as the entry point. The packaged CLI reports the Maven project version and build timestamp, for example `jam 1.0.0-SNAPSHOT (built 2026-05-04T21:18:42Z)`.
-
-## Native Executable
-
-With SDKMAN and a Java 21 GraalVM installed, build the native CLI with:
-
-```bash
-source "$HOME/.sdkman/bin/sdkman-init.sh"
-sdk use java 21.0.2-graalce
-mvn -Pnative package
-./target/jam --help
-./target/jam --version
-```
-
-The `native` Maven profile uses GraalVM Native Build Tools and produces `target/jam` for the current OS and CPU architecture. Replace `21.0.2-graalce` with the Java 21 GraalVM candidate installed on your machine. Native image builds are platform-specific, so release builds should run once per target platform. The native executable uses the same generated version metadata as the shaded JAR.
 
 ## `project.json`
 
@@ -91,7 +76,7 @@ java -jar target/jam-1.0.0-SNAPSHOT.jar clean
 java -jar target/jam-1.0.0-SNAPSHOT.jar package
 ```
 
-The examples above use the shaded JAR directly. If you install or alias the native executable as `jam`, replace `java -jar target/jam-1.0.0-SNAPSHOT.jar` with `jam`.
+The examples above use the shaded JAR directly. If you install or alias the JAR launcher as `jam`, replace `java -jar target/jam-1.0.0-SNAPSHOT.jar` with `jam`.
 
 ## Command Reference
 
