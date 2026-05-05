@@ -33,7 +33,7 @@ public class InstallCommand implements Runnable {
     @Override
     public void run() {
         try {
-            ArtifactResolver resolver = new ArtifactResolver(opts.resolveCache());
+            ArtifactResolver resolver = new ArtifactResolver(opts.resolveCache(), opts.ignorePomRepos, opts.verbose);
             Installer installer = new Installer();
             List<String> coords;
 

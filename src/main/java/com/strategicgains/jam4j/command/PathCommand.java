@@ -32,7 +32,7 @@ public class PathCommand implements Runnable {
     @Override
     public void run() {
         try {
-            ArtifactResolver resolver = new ArtifactResolver(opts.resolveCache());
+            ArtifactResolver resolver = new ArtifactResolver(opts.resolveCache(), opts.ignorePomRepos, opts.verbose);
             List<String> coords;
 
             if (artifacts != null && !artifacts.isEmpty()) {

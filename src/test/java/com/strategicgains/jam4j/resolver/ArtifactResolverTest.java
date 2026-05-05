@@ -27,6 +27,12 @@ class ArtifactResolverTest {
     }
 
     @Test
+    void usesCanonicalMavenCentralRepository() {
+        assertThat(ArtifactResolver.MAVEN_CENTRAL_URL)
+            .isEqualTo("https://repo.maven.apache.org/maven2/");
+    }
+
+    @Test
     void localSearchExcludesSnapshotsByDefault() throws Exception {
         writeLocalArtifact("com.example", "demo", "1.0.0-SNAPSHOT");
         writeLocalArtifact("com.example", "demo", "1.0.0");

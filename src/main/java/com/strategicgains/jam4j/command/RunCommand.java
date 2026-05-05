@@ -92,7 +92,7 @@ public class RunCommand implements Runnable {
     String resolveClasspath(ProjectJson project) throws Exception {
         List<String> coords = project.allDependencyCoords();
         if (coords.isEmpty()) return "";
-        ArtifactResolver resolver = new ArtifactResolver(opts.resolveCache());
+        ArtifactResolver resolver = new ArtifactResolver(opts.resolveCache(), opts.ignorePomRepos, opts.verbose);
         List<File> jars = resolver.resolve(coords, opts.extraRepos);
         return jars.stream().map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
     }

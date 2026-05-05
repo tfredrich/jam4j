@@ -13,6 +13,9 @@ import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
+import org.eclipse.aether.transfer.AbstractTransferListener;
+import org.eclipse.aether.transfer.TransferEvent;
+import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
 
@@ -37,8 +40,10 @@ import org.w3c.dom.Element;
 
 public class ArtifactResolver {
 
+    static final String MAVEN_CENTRAL_URL = "https://repo.maven.apache.org/maven2/";
+
     private static final RemoteRepository MAVEN_CENTRAL = new RemoteRepository.Builder(
-        "central", "default", "https://repo1.maven.org/maven2/").build();
+        "central", "default", MAVEN_CENTRAL_URL).build();
 
     private static final String SEARCH_API = "https://search.maven.org/solrsearch/select";
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -50,9 +55,14 @@ public class ArtifactResolver {
     private final Path cacheDir;
 
     public ArtifactResolver(Path cacheDir) {
+        this(cacheDir, false, false);
+    }
+
+    public ArtifactResolver(Path cacheDir, boolean ignorePomRepositories, boolean verboseTransfers) {
         this.cacheDir = cacheDir;
         this.system = ResolverFactory.newRepositorySystem();
-        this.session = ResolverFactory.newSession(system, cacheDir);
+        this.session = ResolverFactory.newSession(system, cacheDir, ignorePomRepositories,
+            verboseTransfers ? new VerboseTransferListener() : null);
     }
 
     /**
@@ -322,6 +332,25 @@ public class ArtifactResolver {
         /** Returns the canonical install coordinate: group:artifact:version */
         public String coord() {
             return groupId + ":" + artifactId + ":" + version;
+        }
+    }
+
+    private static class VerboseTransferListener extends AbstractTransferListener {
+
+        @Override
+        public void transferInitiated(TransferEvent event) {
+            TransferResource resource = event.getResource();
+            System.err.println("Downloading from " + resource.getRepositoryId() + ": "
+                + resource.getRepositoryUrl() + resource.getResourceName());
+        }
+
+        @Override
+        public void transferFailed(TransferEvent event) {
+            TransferResource resource = event.getResource();
+            Exception exception = event.getException();
+            String message = exception == null ? "unknown error" : exception.getMessage();
+            System.err.println("Failed from " + resource.getRepositoryId() + ": "
+                + resource.getRepositoryUrl() + resource.getResourceName() + " (" + message + ")");
         }
     }
 

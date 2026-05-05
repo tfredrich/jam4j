@@ -26,6 +26,10 @@ public class CommonOptions {
         description = "URL to additional repository (e.g. -r myrepo=https://my.repo.com/maven2). Set JAM_REPO_<name>_USER and JAM_REPO_<name>_PASSWORD for auth.")
     public List<String> extraRepos = new ArrayList<>();
 
+    @Option(names = "--ignore-pom-repos",
+        description = "Ignore repositories declared in dependency POMs; resolve only from Maven Central and --repo repositories.")
+    public boolean ignorePomRepos;
+
     @Option(names = {"-q", "--quiet"}, description = "Don't output non-essential information")
     public boolean quiet;
 

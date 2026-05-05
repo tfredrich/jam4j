@@ -140,7 +140,7 @@ Options:
 - `--no-central`: skip Maven Central and search only the local cache or configured repositories
 - `-p, --project <file>`: project file to update during interactive installs, default `./project.json`
 
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `-q, --quiet`, and `-v, --verbose`.
+Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Examples:
 
@@ -163,7 +163,7 @@ Options:
 
 - `-p, --project <file>`: project file to read or update, default `./project.json`
 
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `-q, --quiet`, and `-v, --verbose`.
+Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Examples:
 
@@ -171,6 +171,7 @@ Examples:
 jam install
 jam install com.fasterxml.jackson.core:jackson-databind:2.17.1
 jam install -d vendor/lib org.assertj:assertj-core:3.25.3
+jam install --ignore-pom-repos com.hazelcast:hazelcast:5.5.0
 ```
 
 ### `jam path [options] [artifact...]`
@@ -183,7 +184,7 @@ Options:
 
 - `-p, --project <file>`: project file to read, default `./project.json`
 
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `-q, --quiet`, and `-v, --verbose`.
+Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Examples:
 
@@ -205,7 +206,7 @@ Options:
 - `-p, --project <file>`: project file to read, default `./project.json`
 - `-a, --arg <arg>`: pass an argument to the preceding script. This is parsed by `jam run` rather than declared as a picocli option, so it appears after a script name.
 
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `-q, --quiet`, and `-v, --verbose`.
+Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Examples:
 
@@ -226,7 +227,7 @@ Options:
 
 - `-p, --project <file>`: project file to read, default `./project.json`
 
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `-q, --quiet`, and `-v, --verbose`.
+Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Example:
 
@@ -244,7 +245,7 @@ Options:
 
 - `-p, --project <file>`: project file to read, default `./project.json`
 
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `-q, --quiet`, and `-v, --verbose`.
+Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Example:
 
@@ -262,7 +263,7 @@ Options:
 
 - `-p, --project <file>`: project file to read, default `./project.json`
 
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `-q, --quiet`, and `-v, --verbose`.
+Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Example:
 
@@ -280,7 +281,7 @@ Options:
 
 - `-p, --project <file>`: project file to read, default `./project.json`
 
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `-q, --quiet`, and `-v, --verbose`.
+Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Example:
 
@@ -315,9 +316,17 @@ Common options are available on `search`, `install`, `path`, `run`, `build`, `te
 - `-d, --directory <dir>`: install directory, defaulting to `./lib`
 - `-L, --local-only`: copy JARs instead of creating symlinks
 - `-r, --repo <url|name=url>`: add a repository
+- `--ignore-pom-repos`: strict mode; ignore repositories declared by dependency POMs and resolve only from Maven Central plus `--repo` repositories
 - `-q, --quiet` and `-v, --verbose`: control output
 
 For named repositories, credentials can be supplied with `JAM_REPO_<NAME>_USER` and `JAM_REPO_<NAME>_PASSWORD`.
+
+By default, artifact resolution follows Maven behavior and may use repositories declared in dependency POMs. Use `--ignore-pom-repos` when you want reproducible strict resolution from only Maven Central and repositories you explicitly declare:
+
+```bash
+jam install --ignore-pom-repos --repo internal=https://repo.example.com/maven2 com.example:tool:1.0.0
+jam path --ignore-pom-repos com.hazelcast:hazelcast:5.5.0
+```
 
 ## Source Layout
 
