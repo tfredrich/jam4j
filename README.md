@@ -29,6 +29,54 @@ java -jar target/jam4j-1.0.0-SNAPSHOT.jar --version
 
 `mvn package` builds a shaded standalone JAR with `com.strategicgains.jam4j.Jam` as the entry point. The packaged CLI reports the Maven project version and build timestamp, for example `jam 1.0.0-SNAPSHOT (build 2026-05-04T21:18:42Z)`.
 
+## Release Flow
+
+CI runs on branch pushes and pull requests. It builds the shaded JAR and smoke-tests the CLI.
+
+Versioned releases are created from Git tags. To publish a release:
+
+1. Update the Maven version in `pom.xml` from a snapshot to the release version, for example `1.0.0-SNAPSHOT` to `1.0.0`.
+2. Verify the release build locally:
+
+   ```bash
+   mvn clean package
+   java -jar target/jam4j-1.0.0.jar --version
+   ```
+
+3. Commit the release version:
+
+   ```bash
+   git add pom.xml
+   git commit -m "release: 1.0.0"
+   ```
+
+4. Create and push a matching tag:
+
+   ```bash
+   git tag v1.0.0
+   git push origin main
+   git push origin v1.0.0
+   ```
+
+   You can also push the branch and all local tags together:
+
+   ```bash
+   git push origin main --tags
+   ```
+
+The release workflow runs only for tags matching `v*`. It verifies that the tag version matches `pom.xml`, rejects `*-SNAPSHOT` versions, builds the package, and publishes a GitHub Release with:
+
+- `jam4j-<version>.jar`
+- `jam4j-<version>.jar.sha256`
+
+After publishing, bump `pom.xml` to the next development snapshot and commit it:
+
+```bash
+git add pom.xml
+git commit -m "chore: start 1.0.1-SNAPSHOT"
+git push origin main
+```
+
 ## `project.json`
 
 A project manifest can declare dependencies, dev dependencies, a main class, and named scripts:
