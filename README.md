@@ -27,7 +27,7 @@ java -jar target/jam-1.0.0-SNAPSHOT.jar --help
 java -jar target/jam-1.0.0-SNAPSHOT.jar --version
 ```
 
-`mvn package` builds a shaded standalone JAR with `com.strategicgains.jam4j.Jam` as the entry point. The packaged CLI reports the Maven project version and build timestamp, for example `jam 1.0.0-SNAPSHOT (built 2026-05-04T21:18:42Z)`.
+`mvn package` builds a shaded standalone JAR with `com.strategicgains.jam4j.Jam` as the entry point. The packaged CLI reports the Maven project version and build timestamp, for example `jam 1.0.0-SNAPSHOT (build 2026-05-04T21:18:42Z)`.
 
 ## `project.json`
 

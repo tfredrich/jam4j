@@ -14,7 +14,7 @@ class JamTest {
     @Test
     void formatsVersionWithBuildTime() {
         assertThat(Jam.formatVersion("1.0.0-SNAPSHOT", "2026-05-04T14:30:12Z"))
-            .isEqualTo("jam 1.0.0-SNAPSHOT (built 2026-05-04T14:30:12Z)");
+            .isEqualTo("jam 1.0.0-SNAPSHOT (build 2026-05-04T14:30:12Z)");
     }
 
     @Test

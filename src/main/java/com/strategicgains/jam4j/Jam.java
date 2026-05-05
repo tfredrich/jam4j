@@ -5,8 +5,14 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.CodeSource;
+import java.util.Optional;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 @Command(
     name = "jam",
@@ -41,10 +47,7 @@ public class Jam implements Runnable {
         @Override
         public String[] getVersion() {
             BuildMetadata metadata = readBuildMetadata();
-            Package jamPackage = Jam.class.getPackage();
-            String version = firstNonBlank(metadata.version(), jamPackage.getImplementationVersion());
-
-            return new String[] { formatVersion(version, metadata.buildTime()) };
+            return new String[] { formatVersion(metadata.version(), metadata.buildTime()) };
         }
     }
 
@@ -55,27 +58,39 @@ public class Jam implements Runnable {
             return "jam " + resolvedVersion;
         }
 
-        return "jam " + resolvedVersion + " (built " + buildTime + ")";
+        return "jam " + resolvedVersion + " (build " + buildTime + ")";
     }
 
     private static BuildMetadata readBuildMetadata() {
-        Properties properties = new Properties();
-
-        try (InputStream stream = Jam.class.getResourceAsStream("/com/strategicgains/jam4j/build.properties")) {
-            if (stream != null) {
-                properties.load(stream);
-            }
-        } catch (IOException e) {
-            return BuildMetadata.empty();
-        }
-
         return new BuildMetadata(
-            properties.getProperty("version"),
-            properties.getProperty("build.time"));
+            Jam.class.getPackage().getImplementationVersion(),
+            readManifestBuildTime().orElse(null));
     }
 
-    private static String firstNonBlank(String first, String second) {
-        return isBlank(first) ? second : first;
+    private static Optional<String> readManifestBuildTime() {
+        try {
+            CodeSource codeSourceLocation = Jam.class.getProtectionDomain().getCodeSource();
+            if (codeSourceLocation == null) {
+                return Optional.empty();
+            }
+
+            Path codeSource = Path.of(codeSourceLocation.getLocation().toURI());
+            if (!Files.isRegularFile(codeSource)) {
+                return Optional.empty();
+            }
+
+            try (JarFile jar = new JarFile(codeSource.toFile())) {
+                Manifest manifest = jar.getManifest();
+                if (manifest == null) {
+                    return Optional.empty();
+                }
+
+                Attributes attributes = manifest.getMainAttributes();
+                return Optional.ofNullable(attributes.getValue("Build-Time")).filter(value -> !value.isBlank());
+            }
+        } catch (IOException | IllegalArgumentException | SecurityException | URISyntaxException e) {
+            return Optional.empty();
+        }
     }
 
     private static boolean isBlank(String value) {
@@ -83,9 +98,5 @@ public class Jam implements Runnable {
     }
 
     private record BuildMetadata(String version, String buildTime) {
-
-        private static BuildMetadata empty() {
-            return new BuildMetadata(null, null);
-        }
     }
 }
