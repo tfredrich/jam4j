@@ -190,10 +190,13 @@ Resolves and installs artifacts into the local library directory. Artifacts must
 
 If no artifacts are supplied, `jam install` reads all `dependencies` and `devDependencies` from `project.json` and installs them.
 
+Pass `--from <pom.xml>` to bootstrap from an existing Maven project. `jam` reads all `<dependency>` entries from the POM, installs the resolved JARs, and writes them into `project.json` — creating the file if it does not exist. Compile- and runtime-scoped dependencies are recorded under `dependencies`; test-, provided-, and system-scoped dependencies are recorded under `devDependencies`. If `project.json` is created from scratch, `name` and `version` are populated from the POM's `artifactId` and `version`.
+
 Aliases: `i`
 
 Options:
 
+- `-f, --from <file>`: read dependencies from a Maven `pom.xml` and create or update `project.json`
 - `-p, --project <file>`: project file to read or update, default `./project.json`
 
 Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
@@ -205,6 +208,8 @@ jam install
 jam install com.fasterxml.jackson.core:jackson-databind:2.17.1
 jam install -d vendor/lib org.assertj:assertj-core:3.25.3
 jam install --ignore-pom-repos com.hazelcast:hazelcast:5.5.0
+jam install --from pom.xml
+jam install -f pom.xml -d vendor/lib
 ```
 
 ### `jam path [options] [artifact...]`

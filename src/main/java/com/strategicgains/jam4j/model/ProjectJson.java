@@ -54,6 +54,10 @@ public class ProjectJson {
         dependencies.put(groupArtifact, version);
     }
 
+    public void addDevDependency(String groupArtifact, String version) {
+        devDependencies.put(groupArtifact, version);
+    }
+
     private static List<String> toCoords(Map<String, String> deps) {
         List<String> coords = new ArrayList<>();
         for (Map.Entry<String, String> entry : deps.entrySet()) {
