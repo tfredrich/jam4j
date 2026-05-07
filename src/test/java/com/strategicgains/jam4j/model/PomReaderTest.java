@@ -44,6 +44,15 @@ class PomReaderTest {
     }
 
     @Test
+    void resolvesPropertyPlaceholdersInVersions() throws Exception {
+        PomReader pom = PomReader.from(fixture("test-pom.xml"));
+        Map<String, String> deps = pom.getDependencies();
+        Map<String, String> devDeps = pom.getDevDependencies();
+        assertThat(deps.get("com.fasterxml.jackson.core:jackson-databind")).isEqualTo("2.17.1");
+        assertThat(devDeps.get("org.junit.jupiter:junit-jupiter")).isEqualTo("5.11.0");
+    }
+
+    @Test
     void allCoordsContainsBothScopes() throws Exception {
         PomReader pom = PomReader.from(fixture("test-pom.xml"));
         List<String> coords = pom.allCoords();

@@ -7,12 +7,17 @@
     <artifactId>my-app</artifactId>
     <version>1.2.3</version>
 
+    <properties>
+        <jackson.version>2.17.1</jackson.version>
+        <junit.version>5.11.0</junit.version>
+    </properties>
+
     <dependencies>
-        <!-- compile scope (default) -->
+        <!-- compile scope (default), version via property -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.17.1</version>
+            <version>${jackson.version}</version>
         </dependency>
         <!-- explicit compile scope -->
         <dependency>
@@ -28,11 +33,11 @@
             <version>1.5.6</version>
             <scope>runtime</scope>
         </dependency>
-        <!-- test scope -->
+        <!-- test scope, version via property -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.11.0</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- provided scope -->

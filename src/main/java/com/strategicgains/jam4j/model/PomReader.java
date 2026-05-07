@@ -10,8 +10,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PomReader {
+
+    private static final Pattern PROPERTY_REF = Pattern.compile("\\$\\{([^}]+)}");
 
     private final Model model;
     private final Map<String, String> dependencies = new LinkedHashMap<>();
@@ -19,13 +24,14 @@ public class PomReader {
 
     private PomReader(Model model) {
         this.model = model;
+        Properties props = model.getProperties();
 
         for (Dependency dep : model.getDependencies()) {
             String scope = dep.getScope();
             String ga = dep.getGroupId() + ":" + dep.getArtifactId();
-            String version = dep.getVersion();
+            String version = resolve(dep.getVersion(), props);
 
-            if (version == null) continue;
+            if (version == null || version.contains("${")) continue;
 
             if (scope == null || scope.equals("compile") || scope.equals("runtime")) {
                 dependencies.put(ga, version);
@@ -33,6 +39,18 @@ public class PomReader {
                 devDependencies.put(ga, version);
             }
         }
+    }
+
+    private static String resolve(String value, Properties props) {
+        if (value == null) return null;
+        Matcher m = PROPERTY_REF.matcher(value);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            String replacement = props.getProperty(m.group(1));
+            m.appendReplacement(sb, replacement != null ? Matcher.quoteReplacement(replacement) : m.group(0));
+        }
+        m.appendTail(sb);
+        return sb.toString();
     }
 
     public static PomReader from(File pomFile) throws Exception {
