@@ -31,7 +31,11 @@ public class PomReader {
             String ga = dep.getGroupId() + ":" + dep.getArtifactId();
             String version = resolve(dep.getVersion(), props);
 
-            if (version == null || version.contains("${")) continue;
+            if (version == null) continue;
+            if (version.contains("${")) {
+                System.err.println("Warning: skipping " + ga + " — unresolved version: " + version);
+                continue;
+            }
 
             if (scope == null || scope.equals("compile") || scope.equals("runtime")) {
                 dependencies.put(ga, version);
