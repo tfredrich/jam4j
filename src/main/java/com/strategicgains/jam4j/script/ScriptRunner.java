@@ -17,14 +17,23 @@ public class ScriptRunner {
             throws IOException, InterruptedException {
 
         String resolved = substitutor.substitute(script, classpath, workDir);
-        List<String> tokens = tokenize(resolved);
-        if (extraArgs != null) tokens.addAll(extraArgs);
+        if (extraArgs != null && !extraArgs.isEmpty()) {
+            resolved = resolved + " " + String.join(" ", extraArgs);
+        }
 
-        return new ProcessBuilder(tokens)
+        List<String> shellCmd = isWindows()
+            ? List.of("cmd", "/c", resolved)
+            : List.of("sh", "-c", resolved);
+
+        return new ProcessBuilder(shellCmd)
             .directory(workDir.toFile())
             .inheritIO()
             .start()
             .waitFor();
+    }
+
+    private static boolean isWindows() {
+        return System.getProperty("os.name", "").toLowerCase().contains("windows");
     }
 
     /**
