@@ -2,7 +2,10 @@ package com.strategicgains.jam4j.model;
 
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.model.PluginExecution;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 import java.io.File;
 import java.io.FileReader;
@@ -88,5 +91,48 @@ public class PomReader {
 
     public String getVersion() {
         return model.getVersion();
+    }
+
+    public String getMainClass() {
+        if (model.getBuild() == null) return null;
+        for (Plugin plugin : model.getBuild().getPlugins()) {
+            String mainClass = mainClassFromPlugin(plugin);
+            if (mainClass != null) return mainClass;
+        }
+        return null;
+    }
+
+    private static String mainClassFromPlugin(Plugin plugin) {
+        String artifactId = plugin.getArtifactId();
+        if ("maven-jar-plugin".equals(artifactId)) {
+            return xpathValue((Xpp3Dom) plugin.getConfiguration(), "archive", "manifest", "mainClass");
+        }
+        if ("maven-shade-plugin".equals(artifactId)) {
+            for (PluginExecution execution : plugin.getExecutions()) {
+                String v = shadeMainClass((Xpp3Dom) execution.getConfiguration());
+                if (v != null) return v;
+            }
+            return shadeMainClass((Xpp3Dom) plugin.getConfiguration());
+        }
+        return null;
+    }
+
+    private static String shadeMainClass(Xpp3Dom config) {
+        if (config == null) return null;
+        Xpp3Dom transformers = config.getChild("transformers");
+        if (transformers == null) return null;
+        for (Xpp3Dom transformer : transformers.getChildren("transformer")) {
+            Xpp3Dom child = transformer.getChild("mainClass");
+            if (child != null && child.getValue() != null) return child.getValue().trim();
+        }
+        return null;
+    }
+
+    private static String xpathValue(Xpp3Dom node, String... path) {
+        for (String segment : path) {
+            if (node == null) return null;
+            node = node.getChild(segment);
+        }
+        return node != null ? node.getValue() : null;
     }
 }

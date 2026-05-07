@@ -102,10 +102,12 @@ public class InstallCommand implements Runnable {
             project = new ProjectJson();
             project.name = pom.getName();
             project.version = pom.getVersion();
-            project.scripts.put("build", "javac -cp {{deps}} -d {./target/classes} {./src/main/java/Main.java}");
-            project.scripts.put("test", "java -ea -cp {./target/classes}{:}{{deps}} MainTest");
-            project.scripts.put("run", "java -cp {./target/classes}{:}{{deps}} Main");
-            project.scripts.put("clean", "rm -rf {./target}");
+            String mainClass = pom.getMainClass();
+            project.mainClass = mainClass;
+            project.scripts.put("build", "javac -cp {{deps}} -d {./target/classes} $(find {./src/main/java} -name \"*.java\")");
+            project.scripts.put("test", "javac -cp {./target/classes}{:}{{deps}} -d {./target/test-classes} $(find {./src/test/java} -name \"*.java\")");
+            project.scripts.put("run", "java -cp {./target/classes}{:}{{deps}} " + (mainClass != null ? mainClass : "<mainClass>"));
+            project.scripts.put("clean", "rm -rf {./target/classes} {./target/test-classes}");
         }
         for (Map.Entry<String, String> e : pom.getDependencies().entrySet()) {
             project.addDependency(e.getKey(), e.getValue());

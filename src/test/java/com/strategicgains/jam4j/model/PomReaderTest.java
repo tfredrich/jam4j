@@ -64,4 +64,22 @@ class PomReaderTest {
             "javax.servlet:javax.servlet-api:4.0.1"
         );
     }
+
+    @Test
+    void returnsNullMainClassWhenNoPluginConfigured() throws Exception {
+        PomReader pom = PomReader.from(fixture("test-pom.xml"));
+        assertThat(pom.getMainClass()).isNull();
+    }
+
+    @Test
+    void extractsMainClassFromMavenJarPlugin() throws Exception {
+        PomReader pom = PomReader.from(fixture("test-pom-jar-plugin.xml"));
+        assertThat(pom.getMainClass()).isEqualTo("com.example.Main");
+    }
+
+    @Test
+    void extractsMainClassFromMavenShadePlugin() throws Exception {
+        PomReader pom = PomReader.from(fixture("test-pom-shade-plugin.xml"));
+        assertThat(pom.getMainClass()).isEqualTo("com.example.ShadeMain");
+    }
 }
