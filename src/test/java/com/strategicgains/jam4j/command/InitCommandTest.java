@@ -4,12 +4,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strategicgains.jam4j.Jam;
 import com.strategicgains.jam4j.model.ProjectJson;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +23,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 class InitCommandTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    private PrintStream originalOut;
+    private PrintStream originalErr;
+
+    @BeforeEach
+    void suppressOutput() {
+        originalOut = System.out;
+        originalErr = System.err;
+        System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+        System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+    }
+
+    @AfterEach
+    void restoreOutput() {
+        System.setOut(originalOut);
+        System.setErr(originalErr);
+    }
 
     @TempDir
     Path tempDir;
