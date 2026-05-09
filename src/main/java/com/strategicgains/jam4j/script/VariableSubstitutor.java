@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
  *   {{deps:dev}}      — resolved classpath of production + dev dependencies
  *   {{sources}}       — space-separated list of *.java files under sourceDir
  *   {{tests}}         — space-separated list of *.java files under testDir
+ *   {{main}}          — main class from project.json
  *   {/}               — platform file separator (\ on Windows, / on Mac/Linux)
  *   {:}               — platform path separator (; on Windows, : on Mac/Linux)
  *   {~}               — user home directory
@@ -46,6 +47,7 @@ public class VariableSubstitutor {
             case "{{deps:dev}}" -> vars.devClasspath();
             case "{{sources}}"  -> collectJavaFiles(projectRoot.resolve(vars.sourceDir()));
             case "{{tests}}"    -> collectJavaFiles(projectRoot.resolve(vars.testDir()));
+            case "{{main}}"     -> vars.mainClass() != null ? vars.mainClass() : "";
             default             -> resolveSingleBraceToken(token, projectRoot);
         };
     }

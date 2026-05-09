@@ -121,6 +121,7 @@ Scripts support cross-platform substitutions:
 - `{{deps:dev}}`: resolved classpath of production + dev dependencies
 - `{{sources}}`: space-separated list of all `*.java` files under `sourceDir` (default `src/main/java`)
 - `{{tests}}`: space-separated list of all `*.java` files under `testDir` (default `src/test/java`)
+- `{{main}}`: main class from the `"main"` field in `project.json`
 - `{/}`: platform file separator
 - `{:}`: platform path separator
 - `{~}`: user home directory
@@ -268,7 +269,7 @@ java -cp "$(jam path --dev):target/classes" org.junit.platform.console.ConsoleLa
 
 ### `jam run [options] <script> [args...]`
 
-Executes one or more named scripts from `project.json`. Before running scripts, `jam` resolves project dependencies and makes them available via script variables: `{{deps}}` for production dependencies only, and `{{deps:dev}}` for production + dev dependencies.
+Executes one or more named scripts from `project.json`. Before running scripts, `jam` resolves project dependencies and makes them available via script variables: `{{deps}}` for production dependencies only, and `{{deps:dev}}` for production + dev dependencies. If no `run` script is defined but a `"main"` class is set, `jam run` synthesizes a default: `java -cp {{deps}}{:}{./target/classes} {{main}}`.
 
 Aliases: `r`
 

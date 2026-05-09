@@ -13,6 +13,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,11 +50,12 @@ public class RunCommand implements Runnable {
             ProjectJson project = ProjectJson.load(projectFile);
 
             if (list) {
-                if (project.scripts.isEmpty()) {
+                Map<String, String> scripts = effectiveScripts(project);
+                if (scripts.isEmpty()) {
                     System.out.println("No scripts defined in " + projectFile);
                 } else {
                     System.out.println("Available scripts:");
-                    project.scripts.forEach((name, cmd) ->
+                    scripts.forEach((name, cmd) ->
                         System.out.printf("  %-20s %s%n", name, cmd));
                 }
                 return;
@@ -64,11 +66,14 @@ public class RunCommand implements Runnable {
                 resolveProdClasspath(project),
                 resolveDevClasspath(project),
                 workDir.resolve(project.effectiveSourceDir()),
-                workDir.resolve(project.effectiveTestDir())
+                workDir.resolve(project.effectiveTestDir()),
+                project.mainClass
             );
 
+            Map<String, String> scripts = effectiveScripts(project);
+
             // Parse rawArgs: "scriptName [-a arg]... scriptName [-a arg]..."
-            List<ScriptExecution> executions = parseScriptExecutions(rawArgs, project.scripts);
+            List<ScriptExecution> executions = parseScriptExecutions(rawArgs, scripts);
 
             if (executions.isEmpty()) {
                 System.err.println("No script specified. Use --list to see available scripts.");
@@ -109,6 +114,19 @@ public class RunCommand implements Runnable {
         ArtifactResolver resolver = new ArtifactResolver(opts.resolveCache(), opts.ignorePomRepos, opts.verbose);
         List<File> jars = resolver.resolve(coords, opts.extraRepos);
         return jars.stream().map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
+    }
+
+    /**
+     * Returns project scripts, injecting a default "run" script when mainClass is set
+     * but no "run" script is defined.
+     */
+    Map<String, String> effectiveScripts(ProjectJson project) {
+        if (project.scripts.containsKey("run") || project.mainClass == null) {
+            return project.scripts;
+        }
+        Map<String, String> scripts = new LinkedHashMap<>(project.scripts);
+        scripts.put("run", "java -cp {{deps}}{:}{./target/classes} {{main}}");
+        return scripts;
     }
 
     /** Run a named script with optional extra args — used by convenience commands. */

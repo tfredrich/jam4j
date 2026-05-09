@@ -6,5 +6,6 @@ public record ScriptVariables(
     String prodClasspath,
     String devClasspath,
     Path sourceDir,
-    Path testDir
+    Path testDir,
+    String mainClass
 ) {}
