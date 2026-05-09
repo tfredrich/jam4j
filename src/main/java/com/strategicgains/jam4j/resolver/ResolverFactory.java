@@ -47,6 +47,8 @@ public class ResolverFactory {
             TransferListener transferListener) {
 
         DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
+        // Model builder uses system properties to evaluate JDK profile activation (java.version, etc.)
+        session.setSystemProperties(System.getProperties());
         session.setConfigProperty(ConfigurationProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT_MILLIS);
         session.setConfigProperty(ConfigurationProperties.REQUEST_TIMEOUT, REQUEST_TIMEOUT_MILLIS);
         session.setConfigProperty(ConfigurationProperties.HTTP_RETRY_HANDLER_COUNT, HTTP_RETRY_COUNT);

@@ -103,6 +103,28 @@ class ArtifactResolverTest {
 
     @Test
     @Tag("integration")
+    void resolvesExactlyDeclaredArtifacts() throws Exception {
+        ArtifactResolver resolver = new ArtifactResolver(
+            Path.of(System.getProperty("user.home"), ".m2", "repository"));
+        List<File> files = resolver.resolve(
+            List.of("com.fasterxml.jackson.core:jackson-databind:2.17.1",
+                    "com.fasterxml.jackson.core:jackson-core:2.17.1"), List.of());
+        assertThat(files).extracting(File::getName)
+            .contains("jackson-databind-2.17.1.jar", "jackson-core-2.17.1.jar");
+    }
+
+    @Test
+    @Tag("integration")
+    void resolvesTransitiveDependencies() throws Exception {
+        ArtifactResolver resolver = new ArtifactResolver(tempDir);
+        List<File> files = resolver.resolve(
+            List.of("com.fasterxml.jackson.core:jackson-databind:2.17.1"), List.of());
+        assertThat(files).extracting(File::getName)
+            .contains("jackson-databind-2.17.1.jar", "jackson-core-2.17.1.jar", "jackson-annotations-2.17.1.jar");
+    }
+
+    @Test
+    @Tag("integration")
     void searchReturnsResults() throws Exception {
         ArtifactResolver resolver = new ArtifactResolver(tempDir);
         List<ArtifactResolver.SearchResult> results = resolver.search("jackson-databind", 5);

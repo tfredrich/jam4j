@@ -9,15 +9,16 @@ import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.aether.util.repository.AuthenticationBuilder;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
-import org.eclipse.aether.resolution.DependencyResult;
+import org.eclipse.aether.util.artifact.JavaScopes;
+import org.eclipse.aether.util.filter.DependencyFilterUtils;
+import org.eclipse.aether.util.repository.AuthenticationBuilder;
 import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
-import org.eclipse.aether.util.artifact.JavaScopes;
-import org.eclipse.aether.util.filter.DependencyFilterUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,34 +67,39 @@ public class ArtifactResolver {
     }
 
     /**
-     * Resolve a list of artifact coordinates (group:artifact:version) plus their
-     * transitive compile-scope dependencies. Returns local JAR files.
+     * Resolve a list of artifact coordinates (group:artifact:version) using project.json as
+     * the authoritative root dependency list. Follows remote POMs to discover and download
+     * transitive compile/runtime dependencies. Returns local JAR files.
      */
     public List<File> resolve(List<String> coords, List<String> extraRepoSpecs)
-            throws DependencyResolutionException {
+            throws ArtifactResolutionException {
 
         List<RemoteRepository> repos = buildRepos(extraRepoSpecs);
 
         CollectRequest collectRequest = new CollectRequest();
-        collectRequest.setRepositories(repos);
-
         for (String coord : coords) {
             Artifact artifact = new DefaultArtifact(normalizeCoord(coord));
             collectRequest.addDependency(new Dependency(artifact, JavaScopes.COMPILE));
         }
+        repos.forEach(collectRequest::addRepository);
 
         DependencyRequest dependencyRequest = new DependencyRequest(
             collectRequest,
-            DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE));
+            DependencyFilterUtils.classpathFilter(JavaScopes.RUNTIME));
 
-        DependencyResult result = system.resolveDependencies(session, dependencyRequest);
-
-        List<File> files = new ArrayList<>();
-        for (var ar : result.getArtifactResults()) {
-            File f = ar.getArtifact().getFile();
-            if (f != null) files.add(f);
+        try {
+            List<ArtifactResult> results = system.resolveDependencies(session, dependencyRequest)
+                .getArtifactResults();
+            List<File> files = new ArrayList<>();
+            for (ArtifactResult ar : results) {
+                File f = ar.getArtifact().getFile();
+                if (f != null) files.add(f);
+            }
+            return files;
+        } catch (DependencyResolutionException e) {
+            throw new ArtifactResolutionException(
+                e.getResult().getArtifactResults(), e.getMessage(), e);
         }
-        return files;
     }
 
     /**
