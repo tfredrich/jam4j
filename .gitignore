@@ -1,3 +1,6 @@
 target/
 .claude/
 lib/
+.project
+.settings/
+.classpath
