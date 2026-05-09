@@ -93,16 +93,25 @@ A project manifest can declare dependencies, dev dependencies, a main class, and
     "org.junit.jupiter:junit-jupiter": "5.10.2"
   },
   "scripts": {
-    "build": "javac -cp {{deps}} -d {./target/classes} src{/}*.java",
+    "build": "javac -cp {{deps}} -d {./target/classes} {{sources}}",
     "run": "java -cp {{deps}}{:}{./target/classes} com.example.Main",
-    "test": "java -cp {{deps:dev}}{:}{./target/classes} org.junit.platform.console.ConsoleLauncher --scan-classpath",
+    "test": "javac -cp {{deps:dev}} -d {./target/test-classes} {{sources}} {{tests}} && java -cp {{deps:dev}}{:}{./target/test-classes} org.junit.platform.console.ConsoleLauncher --scan-classpath",
     "clean": "rm -rf {./target/classes}",
-    "package": "javac -cp {{deps}} -d {./target/classes} src{/}*.java && jar cf {./target/app.jar} -C {./target/classes} ."
+    "package": "javac -cp {{deps}} -d {./target/classes} {{sources}} && jar cf {./target/app.jar} -C {./target/classes} ."
   }
 }
 ```
 
 Dependency keys use `group:artifact`; values are versions. At runtime they are resolved as Maven coordinates such as `group:artifact:version`.
+
+The optional `sourceDir` and `testDir` fields override the default source roots used by `{{sources}}` and `{{tests}}`. Omit them to use the standard Maven layout (`src/main/java` and `src/test/java`):
+
+```json
+{
+  "sourceDir": "src",
+  "testDir": "test"
+}
+```
 
 ## Script Variables
 
@@ -110,6 +119,8 @@ Scripts support cross-platform substitutions:
 
 - `{{deps}}`: resolved classpath of production dependencies only
 - `{{deps:dev}}`: resolved classpath of production + dev dependencies
+- `{{sources}}`: space-separated list of all `*.java` files under `sourceDir` (default `src/main/java`)
+- `{{tests}}`: space-separated list of all `*.java` files under `testDir` (default `src/test/java`)
 - `{/}`: platform file separator
 - `{:}`: platform path separator
 - `{~}`: user home directory

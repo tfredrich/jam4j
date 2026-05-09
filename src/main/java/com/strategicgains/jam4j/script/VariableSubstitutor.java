@@ -1,6 +1,9 @@
 package com.strategicgains.jam4j.script;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -13,6 +16,8 @@ import java.util.stream.Collectors;
  * Supported tokens:
  *   {{deps}}          — resolved classpath of production dependencies only
  *   {{deps:dev}}      — resolved classpath of production + dev dependencies
+ *   {{sources}}       — space-separated list of *.java files under sourceDir
+ *   {{tests}}         — space-separated list of *.java files under testDir
  *   {/}               — platform file separator (\ on Windows, / on Mac/Linux)
  *   {:}               — platform path separator (; on Windows, : on Mac/Linux)
  *   {~}               — user home directory
@@ -24,22 +29,42 @@ public class VariableSubstitutor {
     // Matches any {{…}} token first (greedy two-brace form), then any single-brace {…} token
     private static final Pattern TOKEN = Pattern.compile("\\{\\{[^}]+\\}\\}|\\{[^}]+\\}");
 
-    public String substitute(String script, String prodClasspath, String devClasspath, Path projectRoot) {
+    public String substitute(String script, ScriptVariables vars, Path projectRoot) {
         Matcher m = TOKEN.matcher(script);
         StringBuilder sb = new StringBuilder();
         while (m.find()) {
             m.appendReplacement(sb, Matcher.quoteReplacement(
-                resolveToken(m.group(), prodClasspath, devClasspath, projectRoot)));
+                resolveToken(m.group(), vars, projectRoot)));
         }
         m.appendTail(sb);
         return sb.toString();
     }
 
-    private String resolveToken(String token, String prodClasspath, String devClasspath, Path projectRoot) {
-        if (token.equals("{{deps}}")) return prodClasspath;
-        if (token.equals("{{deps:dev}}")) return devClasspath;
+    private String resolveToken(String token, ScriptVariables vars, Path projectRoot) {
+        return switch (token) {
+            case "{{deps}}"     -> vars.prodClasspath();
+            case "{{deps:dev}}" -> vars.devClasspath();
+            case "{{sources}}"  -> collectJavaFiles(projectRoot.resolve(vars.sourceDir()));
+            case "{{tests}}"    -> collectJavaFiles(projectRoot.resolve(vars.testDir()));
+            default             -> resolveSingleBraceToken(token, projectRoot);
+        };
+    }
 
-        String content = token.substring(1, token.length() - 1); // strip { } or {{ }}
+    private String collectJavaFiles(Path dir) {
+        if (!Files.isDirectory(dir)) return "";
+        try (var stream = Files.walk(dir)) {
+            return stream
+                .filter(p -> p.toString().endsWith(".java"))
+                .sorted()
+                .map(Path::toString)
+                .collect(Collectors.joining(" "));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private String resolveSingleBraceToken(String token, Path projectRoot) {
+        String content = token.substring(1, token.length() - 1); // strip { }
 
         return switch (content) {
             case "/"  -> File.separator;

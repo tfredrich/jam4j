@@ -21,6 +21,12 @@ public class ProjectJson {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public String mainClass;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String sourceDir;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String testDir;
+
     public Map<String, String> dependencies = new LinkedHashMap<>();
     public Map<String, String> devDependencies = new LinkedHashMap<>();
     public Map<String, String> scripts = new LinkedHashMap<>();
@@ -50,6 +56,14 @@ public class ProjectJson {
         List<String> all = new ArrayList<>(dependencyCoords());
         all.addAll(devDependencyCoords());
         return all;
+    }
+
+    public String effectiveSourceDir() {
+        return sourceDir != null ? sourceDir : "src/main/java";
+    }
+
+    public String effectiveTestDir() {
+        return testDir != null ? testDir : "src/test/java";
     }
 
     public void addDependency(String groupArtifact, String version) {

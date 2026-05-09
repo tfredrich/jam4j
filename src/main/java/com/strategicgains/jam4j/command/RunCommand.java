@@ -3,6 +3,7 @@ package com.strategicgains.jam4j.command;
 import com.strategicgains.jam4j.model.ProjectJson;
 import com.strategicgains.jam4j.resolver.ArtifactResolver;
 import com.strategicgains.jam4j.script.ScriptRunner;
+import com.strategicgains.jam4j.script.ScriptVariables;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Option;
@@ -58,8 +59,13 @@ public class RunCommand implements Runnable {
                 return;
             }
 
-            String prodClasspath = resolveProdClasspath(project);
-            String devClasspath = resolveDevClasspath(project);
+            Path workDir = projectFile.toAbsolutePath().getParent();
+            ScriptVariables vars = new ScriptVariables(
+                resolveProdClasspath(project),
+                resolveDevClasspath(project),
+                workDir.resolve(project.effectiveSourceDir()),
+                workDir.resolve(project.effectiveTestDir())
+            );
 
             // Parse rawArgs: "scriptName [-a arg]... scriptName [-a arg]..."
             List<ScriptExecution> executions = parseScriptExecutions(rawArgs, project.scripts);
@@ -71,11 +77,10 @@ public class RunCommand implements Runnable {
             }
 
             ScriptRunner runner = new ScriptRunner();
-            Path workDir = projectFile.toAbsolutePath().getParent();
 
             for (ScriptExecution exec : executions) {
                 if (!opts.quiet) System.out.println("> " + exec.name());
-                int exitCode = runner.run(exec.script(), exec.args(), workDir, prodClasspath, devClasspath, opts.verbose);
+                int exitCode = runner.run(exec.script(), exec.args(), workDir, vars, opts.verbose);
                 if (exitCode != 0) {
                     System.err.println("Script '" + exec.name() + "' failed with exit code " + exitCode);
                     System.exit(exitCode);
