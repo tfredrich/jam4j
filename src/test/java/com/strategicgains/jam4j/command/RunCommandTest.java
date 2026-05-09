@@ -52,4 +52,22 @@ class RunCommandTest {
         Map<String, String> scripts = cmd().effectiveScripts(project);
         assertThat(scripts).doesNotContainKey("package");
     }
+
+    @Test
+    void effectiveScriptsInjectsDefaultBuildScriptWhenNoneIsDefined() {
+        ProjectJson project = new ProjectJson();
+
+        Map<String, String> scripts = cmd().effectiveScripts(project);
+        assertThat(scripts).containsKey("build");
+        assertThat(scripts.get("build")).contains("javac").contains("{{sources}}");
+    }
+
+    @Test
+    void effectiveScriptsKeepsCustomBuildScriptWhenDefined() {
+        ProjectJson project = new ProjectJson();
+        project.scripts.put("build", "gradle build");
+
+        Map<String, String> scripts = cmd().effectiveScripts(project);
+        assertThat(scripts.get("build")).isEqualTo("gradle build");
+    }
 }

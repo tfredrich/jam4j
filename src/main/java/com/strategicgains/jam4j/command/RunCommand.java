@@ -117,14 +117,20 @@ public class RunCommand implements Runnable {
     }
 
     /**
-     * Returns project scripts, injecting a default "run" script when mainClass is set
-     * but no "run" script is defined.
+     * Returns project scripts, injecting defaults for "build" and "run" when not defined.
+     * "build" is always injected if absent. "run" is injected only when mainClass is set.
      */
     Map<String, String> effectiveScripts(ProjectJson project) {
-        if (project.mainClass == null || project.scripts.containsKey("run")) return project.scripts;
-
         Map<String, String> scripts = new LinkedHashMap<>(project.scripts);
-        scripts.put("run", "java -cp {{deps}}{:}{./target/classes} {{main}}");
+
+        if (!scripts.containsKey("build")) {
+            scripts.put("build", "javac -cp {{deps}} -d {./target/classes} {{sources}}");
+        }
+
+        if (project.mainClass != null && !scripts.containsKey("run")) {
+            scripts.put("run", "java -cp {{deps}}{:}{./target/classes} {{main}}");
+        }
+
         return scripts;
     }
 
