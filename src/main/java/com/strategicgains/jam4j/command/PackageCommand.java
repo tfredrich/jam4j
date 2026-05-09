@@ -9,6 +9,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -56,6 +57,12 @@ public class PackageCommand implements Runnable {
             Path outputJar = outputPath != null ? outputPath : defaultOutputJar(project, workDir);
             Path classesDir = classesPath != null ? classesPath : workDir.resolve("target/classes");
 
+            if (!hasClassFiles(classesDir)) {
+                System.err.println("Error: No compiled classes found in " + classesDir + ". Run 'jam build' first.");
+                System.exit(1);
+                return;
+            }
+
             if (!opts.quiet) System.out.println("Building fat JAR: " + outputJar);
 
             ArtifactResolver resolver = new ArtifactResolver(opts.resolveCache(), opts.ignorePomRepos, opts.verbose);
@@ -68,6 +75,15 @@ public class PackageCommand implements Runnable {
             System.err.println("Error: " + e.getMessage());
             if (opts.verbose) e.printStackTrace();
             System.exit(1);
+        }
+    }
+
+    boolean hasClassFiles(Path dir) {
+        if (!Files.isDirectory(dir)) return false;
+        try (var stream = Files.walk(dir)) {
+            return stream.anyMatch(p -> p.toString().endsWith(".class"));
+        } catch (IOException e) {
+            return false;
         }
     }
 
