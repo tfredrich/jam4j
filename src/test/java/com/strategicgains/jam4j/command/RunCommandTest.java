@@ -42,4 +42,32 @@ class RunCommandTest {
         Map<String, String> scripts = cmd().effectiveScripts(project);
         assertThat(scripts).doesNotContainKey("run");
     }
+
+    @Test
+    void effectiveScriptsInjectsDefaultPackageScriptWhenMainClassSetAndNoPackageScript() {
+        ProjectJson project = new ProjectJson();
+        project.mainClass = "com.example.Main";
+
+        Map<String, String> scripts = cmd().effectiveScripts(project);
+        assertThat(scripts).containsKey("package");
+        assertThat(scripts.get("package")).contains("{{jarflags}}");
+    }
+
+    @Test
+    void effectiveScriptsDoesNotInjectPackageScriptWhenMainClassIsNull() {
+        ProjectJson project = new ProjectJson();
+
+        Map<String, String> scripts = cmd().effectiveScripts(project);
+        assertThat(scripts).doesNotContainKey("package");
+    }
+
+    @Test
+    void effectiveScriptsDoesNotOverrideExistingPackageScript() {
+        ProjectJson project = new ProjectJson();
+        project.mainClass = "com.example.Main";
+        project.scripts.put("package", "mvn package");
+
+        Map<String, String> scripts = cmd().effectiveScripts(project);
+        assertThat(scripts.get("package")).isEqualTo("mvn package");
+    }
 }

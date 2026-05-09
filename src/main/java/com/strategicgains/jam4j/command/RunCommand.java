@@ -121,11 +121,15 @@ public class RunCommand implements Runnable {
      * but no "run" script is defined.
      */
     Map<String, String> effectiveScripts(ProjectJson project) {
-        if (project.scripts.containsKey("run") || project.mainClass == null) {
-            return project.scripts;
-        }
+        if (project.mainClass == null) return project.scripts;
+
+        boolean needRun = !project.scripts.containsKey("run");
+        boolean needPackage = !project.scripts.containsKey("package");
+        if (!needRun && !needPackage) return project.scripts;
+
         Map<String, String> scripts = new LinkedHashMap<>(project.scripts);
-        scripts.put("run", "java -cp {{deps}}{:}{./target/classes} {{main}}");
+        if (needRun) scripts.put("run", "java -cp {{deps}}{:}{./target/classes} {{main}}");
+        if (needPackage) scripts.put("package", "jar --create --file {./target/app.jar} {{jarflags}} -C {./target/classes} .");
         return scripts;
     }
 

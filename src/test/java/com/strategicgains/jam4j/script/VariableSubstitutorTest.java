@@ -74,6 +74,19 @@ class VariableSubstitutorTest {
     }
 
     @Test
+    void replacesJarFlagsWithMainClass() {
+        String result = sub.substitute("jar --create {{jarflags}}", vars, root);
+        assertThat(result).isEqualTo("jar --create --main-class com.example.Main");
+    }
+
+    @Test
+    void replacesJarFlagsWithEmptyWhenNoMainClass() {
+        ScriptVariables v = new ScriptVariables(prodCp, devCp, root.resolve("src/main/java"), root.resolve("src/test/java"), null);
+        String result = sub.substitute("jar --create {{jarflags}}", v, root);
+        assertThat(result).isEqualTo("jar --create ");
+    }
+
+    @Test
     void replacesFileSeparator() {
         String result = sub.substitute("src{/}main{/}java", vars, root);
         assertThat(result).isEqualTo("src" + File.separator + "main" + File.separator + "java");

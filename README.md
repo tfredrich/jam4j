@@ -97,7 +97,7 @@ A project manifest can declare dependencies, dev dependencies, a main class, and
     "run": "java -cp {{deps}}{:}{./target/classes} com.example.Main",
     "test": "javac -cp {{deps:dev}} -d {./target/test-classes} {{sources}} {{tests}} && java -cp {{deps:dev}}{:}{./target/test-classes} org.junit.platform.console.ConsoleLauncher --scan-classpath",
     "clean": "rm -rf {./target/classes}",
-    "package": "javac -cp {{deps}} -d {./target/classes} {{sources}} && jar cf {./target/app.jar} -C {./target/classes} ."
+    "package": "javac -cp {{deps}} -d {./target/classes} {{sources}} && jar --create --file {./target/app.jar} {{jarflags}} -C {./target/classes} ."
   }
 }
 ```
@@ -122,6 +122,7 @@ Scripts support cross-platform substitutions:
 - `{{sources}}`: space-separated list of all `*.java` files under `sourceDir` (default `src/main/java`)
 - `{{tests}}`: space-separated list of all `*.java` files under `testDir` (default `src/test/java`)
 - `{{main}}`: main class from the `"main"` field in `project.json`
+- `{{jarflags}}`: `--main-class <mainClass>` when `"main"` is set, otherwise empty
 - `{/}`: platform file separator
 - `{:}`: platform path separator
 - `{~}`: user home directory
@@ -348,7 +349,7 @@ Use `--` before script arguments that begin with `-` so picocli does not parse t
 
 ### `jam package [options] [--] [args...]`
 
-Runs the `package` script from `project.json`. This is a convenience command equivalent to `jam run package`, with any supplied arguments forwarded to the script.
+Runs the `package` script from `project.json`. This is a convenience command equivalent to `jam run package`, with any supplied arguments forwarded to the script. If no `package` script is defined but a `"main"` class is set, `jam package` synthesizes a default: `jar --create --file {./target/app.jar} {{jarflags}} -C {./target/classes} .`
 
 Options:
 
