@@ -378,6 +378,23 @@ jam package --classes target/classes --output dist/myapp-1.0.jar
 
 Use `--` before script arguments that begin with `-` so picocli does not parse them as `jam package` options (only relevant when a `package` script is defined).
 
+#### Comparison with Maven Shade Plugin
+
+**The same:**
+- Strips JAR signature files (`*.SF`, `*.RSA`, `*.DSA`, `*.EC`) so the repacked archive stays valid
+- Merges `META-INF/services/*` by concatenation, preserving all SPI registrations across all JARs
+- Sets `Main-Class` in the manifest
+- First-in-wins for duplicate class/resource entries — the same as Shade's default behavior without custom transformers
+
+**Different:**
+- **No package relocation** — Shade can rewrite bytecode (via ASM) to rename packages and eliminate version conflicts at runtime; `jam package` does not. If two dependencies require incompatible versions of the same library, one version is silently dropped.
+- **No pluggable resource transformers** — Shade ships transformers for XML merging, `NOTICE`/`LICENSE` appending, Plexus component descriptors, and more; `jam package` only handles `META-INF/services/`.
+- **`NOTICE`/`LICENSE` files are not merged** — first-in-wins, so license attributions from some dependencies may be silently dropped from the output archive.
+- **No artifact or class filtering** — Shade can exclude specific JARs or class patterns from the output; `jam package` always includes all production dependencies.
+- **`module-info.class` is not handled specially** — the entry from whichever JAR is processed first is used as-is; Shade has dedicated handling for multi-release JARs and JPMS modules.
+
+If any of these limitations matter for your project, define a `package` script in `project.json` and invoke the Maven Shade Plugin (or another tool) directly.
+
 ## Repository and Cache Options
 
 Common options are available on `search`, `install`, `path`, `run`, `build`, `test`, `clean`, and `package`:
