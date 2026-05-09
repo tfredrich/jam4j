@@ -58,8 +58,8 @@ public class RunCommand implements Runnable {
                 return;
             }
 
-            // Resolve classpath from all dependencies
-            String classpath = resolveClasspath(project);
+            String prodClasspath = resolveProdClasspath(project);
+            String devClasspath = resolveDevClasspath(project);
 
             // Parse rawArgs: "scriptName [-a arg]... scriptName [-a arg]..."
             List<ScriptExecution> executions = parseScriptExecutions(rawArgs, project.scripts);
@@ -75,7 +75,7 @@ public class RunCommand implements Runnable {
 
             for (ScriptExecution exec : executions) {
                 if (!opts.quiet) System.out.println("> " + exec.name());
-                int exitCode = runner.run(exec.script(), exec.args(), workDir, classpath, opts.verbose);
+                int exitCode = runner.run(exec.script(), exec.args(), workDir, prodClasspath, devClasspath, opts.verbose);
                 if (exitCode != 0) {
                     System.err.println("Script '" + exec.name() + "' failed with exit code " + exitCode);
                     System.exit(exitCode);
@@ -88,8 +88,17 @@ public class RunCommand implements Runnable {
         }
     }
 
-    /** Resolve all project deps to a classpath string. Returns empty string if no deps. */
-    String resolveClasspath(ProjectJson project) throws Exception {
+    /** Resolve production-only deps to a classpath string (for {{deps}}). */
+    String resolveProdClasspath(ProjectJson project) throws Exception {
+        List<String> coords = project.dependencyCoords();
+        if (coords.isEmpty()) return "";
+        ArtifactResolver resolver = new ArtifactResolver(opts.resolveCache(), opts.ignorePomRepos, opts.verbose);
+        List<File> jars = resolver.resolve(coords, opts.extraRepos);
+        return jars.stream().map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
+    }
+
+    /** Resolve all deps (prod + dev) to a classpath string (for {{deps:dev}}). */
+    String resolveDevClasspath(ProjectJson project) throws Exception {
         List<String> coords = project.allDependencyCoords();
         if (coords.isEmpty()) return "";
         ArtifactResolver resolver = new ArtifactResolver(opts.resolveCache(), opts.ignorePomRepos, opts.verbose);

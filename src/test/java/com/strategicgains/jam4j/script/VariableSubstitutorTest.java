@@ -11,36 +11,43 @@ class VariableSubstitutorTest {
 
     private final VariableSubstitutor sub = new VariableSubstitutor();
     private final Path root = Path.of("/project");
-    private final String cp = "/home/user/.m2/a.jar" + File.pathSeparator + "/home/user/.m2/b.jar";
+    private final String prodCp = "/home/user/.m2/a.jar" + File.pathSeparator + "/home/user/.m2/b.jar";
+    private final String devCp = prodCp + File.pathSeparator + "/home/user/.m2/test.jar";
 
     @Test
-    void replacesDeps() {
-        String result = sub.substitute("javac -cp {{deps}} Main.java", cp, root);
-        assertThat(result).isEqualTo("javac -cp " + cp + " Main.java");
+    void replacesDepsWithProdClasspath() {
+        String result = sub.substitute("javac -cp {{deps}} Main.java", prodCp, devCp, root);
+        assertThat(result).isEqualTo("javac -cp " + prodCp + " Main.java");
+    }
+
+    @Test
+    void replacesDevDepsWithFullClasspath() {
+        String result = sub.substitute("java -cp {{deps:dev}} TestRunner", prodCp, devCp, root);
+        assertThat(result).isEqualTo("java -cp " + devCp + " TestRunner");
     }
 
     @Test
     void replacesFileSeparator() {
-        String result = sub.substitute("src{/}main{/}java", cp, root);
+        String result = sub.substitute("src{/}main{/}java", prodCp, devCp, root);
         assertThat(result).isEqualTo("src" + File.separator + "main" + File.separator + "java");
     }
 
     @Test
     void replacesPathSeparator() {
-        String result = sub.substitute("a.jar{:}b.jar", cp, root);
+        String result = sub.substitute("a.jar{:}b.jar", prodCp, devCp, root);
         assertThat(result).isEqualTo("a.jar" + File.pathSeparator + "b.jar");
     }
 
     @Test
     void replacesHomeDir() {
         String home = System.getProperty("user.home");
-        String result = sub.substitute("{~}/.m2/settings.xml", cp, root);
+        String result = sub.substitute("{~}/.m2/settings.xml", prodCp, devCp, root);
         assertThat(result).startsWith(home);
     }
 
     @Test
     void replacesRelativePath() {
-        String result = sub.substitute("-d {./target/classes}", cp, root);
+        String result = sub.substitute("-d {./target/classes}", prodCp, devCp, root);
         assertThat(result).contains("target" + File.separator + "classes");
         assertThat(result).doesNotContain("{./");
     }
@@ -48,18 +55,18 @@ class VariableSubstitutorTest {
     @Test
     void replacesMultipleVariablesInOneScript() {
         String script = "javac -cp {{deps}}{:}{./target/classes} -d {./target} src{/}*.java";
-        String result = sub.substitute(script, cp, root);
+        String result = sub.substitute(script, prodCp, devCp, root);
         assertThat(result).doesNotContain("{{deps}}");
         assertThat(result).doesNotContain("{/}");
         assertThat(result).doesNotContain("{:}");
         assertThat(result).doesNotContain("{./");
-        assertThat(result).contains(cp);
+        assertThat(result).contains(prodCp);
     }
 
     @Test
     void noSubstitutionWhenNoTokens() {
         String script = "echo hello world";
-        assertThat(sub.substitute(script, cp, root)).isEqualTo(script);
+        assertThat(sub.substitute(script, prodCp, devCp, root)).isEqualTo(script);
     }
 
     @Test

@@ -13,10 +13,10 @@ public class ScriptRunner {
      * Substitute variables in the script string, append any extra args, tokenize, and execute.
      * The process inherits stdin/stdout/stderr from the jam process.
      */
-    public int run(String script, List<String> extraArgs, Path workDir, String classpath, boolean verbose)
+    public int run(String script, List<String> extraArgs, Path workDir, String prodClasspath, String devClasspath, boolean verbose)
             throws IOException, InterruptedException {
 
-        String resolved = substitutor.substitute(script, classpath, workDir);
+        String resolved = substitutor.substitute(script, prodClasspath, devClasspath, workDir);
         if (extraArgs != null && !extraArgs.isEmpty()) {
             resolved = resolved + " " + String.join(" ", extraArgs);
         }

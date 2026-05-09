@@ -35,12 +35,10 @@ public class InstallCommand implements Runnable {
         try {
             ArtifactResolver resolver = new ArtifactResolver(opts.resolveCache(), opts.ignorePomRepos, opts.verbose);
             Installer installer = new Installer();
-            List<String> coords;
 
             if (artifacts != null && !artifacts.isEmpty()) {
-                coords = artifacts;
-                if (!opts.quiet) System.out.println("Resolving " + coords.size() + " artifact(s)...");
-                List<File> resolved = resolver.resolve(coords, opts.extraRepos);
+                if (!opts.quiet) System.out.println("Resolving " + artifacts.size() + " artifact(s)...");
+                List<File> resolved = resolver.resolve(artifacts, opts.extraRepos);
                 if (!opts.quiet) System.out.println("Resolved " + resolved.size() + " JAR(s). Installing to " + opts.libDir + "...");
                 installer.install(resolved, opts.libDir, opts.localOnly, opts.quiet);
                 boolean updated = saveArtifactsToProject(artifacts);
@@ -52,7 +50,7 @@ public class InstallCommand implements Runnable {
                     return;
                 }
                 ProjectJson project = ProjectJson.load(projectFile);
-                coords = project.allDependencyCoords();
+                List<String> coords = project.allDependencyCoords();
                 if (coords.isEmpty()) {
                     System.out.println("No dependencies found in " + projectFile);
                     return;

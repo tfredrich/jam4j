@@ -11,7 +11,8 @@ import java.util.stream.Collectors;
  * Substitutes jam template variables in script strings before execution.
  *
  * Supported tokens:
- *   {{deps}}          — resolved classpath of all project dependencies
+ *   {{deps}}          — resolved classpath of production dependencies only
+ *   {{deps:dev}}      — resolved classpath of production + dev dependencies
  *   {/}               — platform file separator (\ on Windows, / on Mac/Linux)
  *   {:}               — platform path separator (; on Windows, : on Mac/Linux)
  *   {~}               — user home directory
@@ -20,24 +21,25 @@ import java.util.stream.Collectors;
  */
 public class VariableSubstitutor {
 
-    // Matches {{deps}} first (greedy two-brace form), then any single-brace {…} token
-    private static final Pattern TOKEN = Pattern.compile("\\{\\{deps\\}\\}|\\{[^}]+\\}");
+    // Matches any {{…}} token first (greedy two-brace form), then any single-brace {…} token
+    private static final Pattern TOKEN = Pattern.compile("\\{\\{[^}]+\\}\\}|\\{[^}]+\\}");
 
-    public String substitute(String script, String classpath, Path projectRoot) {
+    public String substitute(String script, String prodClasspath, String devClasspath, Path projectRoot) {
         Matcher m = TOKEN.matcher(script);
         StringBuilder sb = new StringBuilder();
         while (m.find()) {
             m.appendReplacement(sb, Matcher.quoteReplacement(
-                resolveToken(m.group(), classpath, projectRoot)));
+                resolveToken(m.group(), prodClasspath, devClasspath, projectRoot)));
         }
         m.appendTail(sb);
         return sb.toString();
     }
 
-    private String resolveToken(String token, String classpath, Path projectRoot) {
-        if (token.equals("{{deps}}")) return classpath;
+    private String resolveToken(String token, String prodClasspath, String devClasspath, Path projectRoot) {
+        if (token.equals("{{deps}}")) return prodClasspath;
+        if (token.equals("{{deps:dev}}")) return devClasspath;
 
-        String content = token.substring(1, token.length() - 1); // strip { }
+        String content = token.substring(1, token.length() - 1); // strip { } or {{ }}
 
         return switch (content) {
             case "/"  -> File.separator;

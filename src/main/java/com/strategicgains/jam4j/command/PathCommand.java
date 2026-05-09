@@ -26,6 +26,9 @@ public class PathCommand implements Runnable {
     @Option(names = {"-p", "--project"}, description = "Project file to use (default: ./project.json)")
     public Path projectFile = Path.of("project.json");
 
+    @Option(names = {"--dev"}, description = "Include devDependencies in the classpath (default: production only)")
+    public boolean dev;
+
     @Parameters(description = "Artifacts to resolve (format: group:artifact:version). If none, uses project.json.")
     public List<String> artifacts;
 
@@ -44,7 +47,7 @@ public class PathCommand implements Runnable {
                     return;
                 }
                 ProjectJson project = ProjectJson.load(projectFile);
-                coords = project.allDependencyCoords();
+                coords = dev ? project.allDependencyCoords() : project.dependencyCoords();
                 if (coords.isEmpty()) {
                     return; // empty classpath, print nothing
                 }

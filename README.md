@@ -95,13 +95,30 @@ A project manifest can declare dependencies, dev dependencies, a main class, and
   "scripts": {
     "build": "javac -cp {{deps}} -d {./target/classes} src{/}*.java",
     "run": "java -cp {{deps}}{:}{./target/classes} com.example.Main",
-    "test": "java -cp {{deps}} org.junit.platform.console.ConsoleLauncher --scan-classpath",
+    "test": "java -cp {{deps:dev}}{:}{./target/classes} org.junit.platform.console.ConsoleLauncher --scan-classpath",
     "clean": "rm -rf {./target/classes}"
   }
 }
 ```
 
 Dependency keys use `group:artifact`; values are versions. At runtime they are resolved as Maven coordinates such as `group:artifact:version`.
+
+## Script Variables
+
+Scripts support cross-platform substitutions:
+
+- `{{deps}}`: resolved classpath of production dependencies only
+- `{{deps:dev}}`: resolved classpath of production + dev dependencies
+- `{/}`: platform file separator
+- `{:}`: platform path separator
+- `{~}`: user home directory
+- `{./path}`: project-relative path using platform separators
+
+Arguments can be passed to scripts with `-a` or `--arg`:
+
+```bash
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar run build -a --verbose test -a smoke
+```
 
 ## CLI Usage
 
@@ -214,13 +231,14 @@ jam install --ignore-pom-repos com.hazelcast:hazelcast:5.5.0
 
 ### `jam path [options] [artifact...]`
 
-Resolves artifacts and prints a platform-specific Java classpath. If artifacts are supplied, those coordinates are resolved. If no artifacts are supplied, `jam path` reads all `dependencies` and `devDependencies` from `project.json`.
+Resolves artifacts and prints a platform-specific Java classpath. If artifacts are supplied, those coordinates are resolved. If no artifacts are supplied, `jam path` reads `dependencies` from `project.json` (production only by default).
 
 Aliases: `p`
 
 Options:
 
 - `-p, --project <file>`: project file to read, default `./project.json`
+- `--dev`: include `devDependencies` in the classpath (production + dev)
 
 Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
@@ -228,13 +246,15 @@ Examples:
 
 ```bash
 jam path
+jam path --dev
 jam path org.junit.jupiter:junit-jupiter:5.10.2
 java -cp "$(jam path):target/classes" com.example.Main
+java -cp "$(jam path --dev):target/classes" org.junit.platform.console.ConsoleLauncher --scan-classpath
 ```
 
 ### `jam run [options] <script> [args...]`
 
-Executes one or more named scripts from `project.json`. Before running scripts, `jam` resolves all project dependencies and makes that classpath available to the `{{deps}}` script variable.
+Executes one or more named scripts from `project.json`. Before running scripts, `jam` resolves project dependencies and makes them available via script variables: `{{deps}}` for production dependencies only, and `{{deps:dev}}` for production + dev dependencies.
 
 Aliases: `r`
 
@@ -328,22 +348,6 @@ jam package
 ```
 
 Use `--` before script arguments that begin with `-` so picocli does not parse them as `jam package` options.
-
-## Script Variables
-
-Scripts support cross-platform substitutions:
-
-- `{{deps}}`: resolved dependency classpath
-- `{/}`: platform file separator
-- `{:}`: platform path separator
-- `{~}`: user home directory
-- `{./path}`: project-relative path using platform separators
-
-Arguments can be passed to scripts with `-a` or `--arg`:
-
-```bash
-java -jar target/jam4j-1.0.0-SNAPSHOT.jar run build -a --verbose test -a smoke
-```
 
 ## Repository and Cache Options
 
