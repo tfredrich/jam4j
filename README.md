@@ -96,7 +96,8 @@ A project manifest can declare dependencies, dev dependencies, a main class, and
     "build": "javac -cp {{deps}} -d {./target/classes} src{/}*.java",
     "run": "java -cp {{deps}}{:}{./target/classes} com.example.Main",
     "test": "java -cp {{deps:dev}}{:}{./target/classes} org.junit.platform.console.ConsoleLauncher --scan-classpath",
-    "clean": "rm -rf {./target/classes}"
+    "clean": "rm -rf {./target/classes}",
+    "package": "javac -cp {{deps}} -d {./target/classes} src{/}*.java && jar cf {./target/app.jar} -C {./target/classes} ."
   }
 }
 ```
@@ -113,6 +114,8 @@ Scripts support cross-platform substitutions:
 - `{:}`: platform path separator
 - `{~}`: user home directory
 - `{./path}`: project-relative path using platform separators
+
+Scripts are executed through the system shell (`sh -c` on Unix/macOS, `cmd /c` on Windows), so standard shell operators such as `&&`, `||`, `;`, and pipes work exactly as they would on the command line.
 
 Arguments can be passed to scripts with `-a` or `--arg`:
 
