@@ -94,13 +94,15 @@ A project manifest can declare dependencies, dev dependencies, a main class, and
   },
   "scripts": {
     "build": "javac -cp {{deps}} -d {./target/classes} {{sources}}",
-    "run": "java -cp {{deps}}{:}{./target/classes} com.example.Main",
+    "run": "java -cp {{deps}}{:}{./target/classes} {{main}}",
     "test": "javac -cp {{deps:dev}} -d {./target/test-classes} {{sources}} {{tests}} && java -cp {{deps:dev}}{:}{./target/test-classes} org.junit.platform.console.ConsoleLauncher --scan-classpath",
-    "clean": "rm -rf {./target/classes}",
-    "package": "javac -cp {{deps}} -d {./target/classes} {{sources}} && jar --create --file {./target/app.jar} {{jarflags}} -C {./target/classes} ."
+    "clean": "rm -rf {./target/classes}"
   }
 }
 ```
+
+Default scripts are provided for `build`, `run`, `package`, and `clean` if none are defined in `project.json`. Providing
+a definition for a script name overrides the default. For example, if `build` is defined in `project.json`, `jam build` runs that script instead of the default.
 
 Dependency keys use `group:artifact`; values are versions. At runtime they are resolved as Maven coordinates such as `group:artifact:version`.
 
