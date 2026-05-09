@@ -1,13 +1,16 @@
 package com.strategicgains.jam4j.command;
 
+import com.strategicgains.jam4j.model.PomReader;
 import com.strategicgains.jam4j.model.ProjectJson;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 import java.io.Console;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
 
@@ -17,6 +20,9 @@ import java.util.concurrent.Callable;
     description = "Create a scaffold project.json."
 )
 public class InitCommand implements Callable<Integer> {
+
+    @Option(names = {"-f", "--from"}, description = "Bootstrap project.json from a Maven pom.xml file")
+    public File pomFile;
 
     @Option(names = "--force", description = "Overwrite project.json if it already exists")
     public boolean force;
@@ -38,6 +44,35 @@ public class InitCommand implements Callable<Integer> {
         try {
             Path projectRoot = targetDirectory.toAbsolutePath().normalize();
             Path projectFile = projectRoot.resolve("project.json");
+
+            if (pomFile != null) {
+                if (!pomFile.exists()) {
+                    System.err.println("Error: " + pomFile + " not found.");
+                    return 1;
+                }
+                if (Files.exists(projectFile) && !force) {
+                    System.err.println("Error: " + projectFile + " already exists. Use --force to overwrite it.");
+                    return 1;
+                }
+                PomReader pom = PomReader.from(pomFile);
+                ProjectJson project = new ProjectJson();
+                project.name = projectName != null ? projectName : pom.getName();
+                project.version = version != null ? version : pom.getVersion();
+                String mc = mainClass != null ? mainClass : pom.getMainClass();
+                project.mainClass = mc;
+                project.scripts.put("build", "javac -cp {{deps}} -d {./target/classes} $(find {./src/main/java} -name \"*.java\")");
+                project.scripts.put("test", "javac -cp {./target/classes}{:}{{deps}} -d {./target/test-classes} $(find {./src/test/java} -name \"*.java\")");
+                project.scripts.put("run", "java -cp {./target/classes}{:}{{deps}} " + (mc != null ? mc : "<mainClass>"));
+                project.scripts.put("clean", "rm -rf {./target/classes} {./target/test-classes}");
+                for (Map.Entry<String, String> e : pom.getDependencies().entrySet())
+                    project.addDependency(e.getKey(), e.getValue());
+                for (Map.Entry<String, String> e : pom.getDevDependencies().entrySet())
+                    project.addDevDependency(e.getKey(), e.getValue());
+                Files.createDirectories(projectRoot);
+                project.save(projectFile);
+                System.out.println("Created " + projectFile);
+                return 0;
+            }
 
             if (Files.exists(projectFile) && !force) {
                 System.err.println("Error: " + projectFile + " already exists. Use --force to overwrite it.");

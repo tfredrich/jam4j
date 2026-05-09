@@ -141,10 +141,13 @@ Several commands share repository, cache, install-directory, and output options.
 
 Creates a scaffold `project.json`. If no target directory is supplied, `jam` writes to the current directory. The command prompts for missing project metadata and writes default `build`, `test`, `run`, and `clean` scripts.
 
+Pass `--from <pom.xml>` to bootstrap from an existing Maven project. `jam` reads all `<dependency>` entries from the POM and writes them into a new `project.json`. Compile- and runtime-scoped dependencies are recorded under `dependencies`; test-, provided-, and system-scoped dependencies are recorded under `devDependencies`. `name` and `version` are populated from the POM's `artifactId` and `version` unless overridden with `--name` or `--version`.
+
 Aliases: `n`
 
 Options:
 
+- `-f, --from <file>`: bootstrap `project.json` from a Maven `pom.xml`
 - `--force`: overwrite `project.json` if it already exists
 - `--name <name>`: project name
 - `--version <version>`: project version
@@ -156,6 +159,8 @@ Examples:
 jam init
 jam init --name my-app --version 0.1.0 --main com.example.Main ./my-app
 jam init --force
+jam init --from pom.xml
+jam init --from pom.xml --force
 ```
 
 ### `jam search [options] <query...>`
@@ -190,13 +195,10 @@ Resolves and installs artifacts into the local library directory. Artifacts must
 
 If no artifacts are supplied, `jam install` reads all `dependencies` and `devDependencies` from `project.json` and installs them.
 
-Pass `--from <pom.xml>` to bootstrap from an existing Maven project. `jam` reads all `<dependency>` entries from the POM, installs the resolved JARs, and writes them into `project.json` — creating the file if it does not exist. Compile- and runtime-scoped dependencies are recorded under `dependencies`; test-, provided-, and system-scoped dependencies are recorded under `devDependencies`. If `project.json` is created from scratch, `name` and `version` are populated from the POM's `artifactId` and `version`.
-
 Aliases: `i`
 
 Options:
 
-- `-f, --from <file>`: read dependencies from a Maven `pom.xml` and create or update `project.json`
 - `-p, --project <file>`: project file to read or update, default `./project.json`
 
 Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
@@ -208,8 +210,6 @@ jam install
 jam install com.fasterxml.jackson.core:jackson-databind:2.17.1
 jam install -d vendor/lib org.assertj:assertj-core:3.25.3
 jam install --ignore-pom-repos com.hazelcast:hazelcast:5.5.0
-jam install --from pom.xml
-jam install -f pom.xml -d vendor/lib
 ```
 
 ### `jam path [options] [artifact...]`
