@@ -58,9 +58,11 @@ public class PackageCommand implements Runnable {
             Path classesDir = classesPath != null ? classesPath : workDir.resolve("target/classes");
 
             if (!hasClassFiles(classesDir)) {
-                System.err.println("Error: No compiled classes found in " + classesDir + ". Run 'jam build' first.");
-                System.exit(1);
-                return;
+                if (!opts.quiet) System.out.println("build>");
+                RunCommand build = new RunCommand();
+                build.opts = opts;
+                build.projectFile = projectFile;
+                build.runScript("build", null);
             }
 
             if (!opts.quiet) System.out.println("Building fat JAR: " + outputJar);
