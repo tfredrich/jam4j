@@ -349,21 +349,34 @@ Use `--` before script arguments that begin with `-` so picocli does not parse t
 
 ### `jam package [options] [--] [args...]`
 
-Runs the `package` script from `project.json`. This is a convenience command equivalent to `jam run package`, with any supplied arguments forwarded to the script. If no `package` script is defined but a `"main"` class is set, `jam package` synthesizes a default: `jar --create --file {./target/app.jar} {{jarflags}} -C {./target/classes} .`
+Builds a fat (uber) JAR containing the project's compiled classes and all production dependencies merged into a single archive. If a `package` script is defined in `project.json`, that script runs instead and the native build is skipped.
+
+The native build:
+- Merges all production dependency JARs into the output archive
+- Concatenates `META-INF/services/*` entries so SPI registrations from all JARs survive
+- Strips JAR signature files so the repacked archive remains valid
+- Sets `Main-Class` in the manifest when `"main"` is configured in `project.json`
+- Project classes from `--classes` always override dependency entries with the same path
+
+Output JAR defaults to `target/<name>-<version>.jar` (using `name` and `version` from `project.json`).
 
 Options:
 
 - `-p, --project <file>`: project file to read, default `./project.json`
+- `-o, --output <file>`: output JAR path (default: `target/<name>-<version>.jar`)
+- `--classes <dir>`: compiled classes directory (default: `target/classes`)
 
 Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
-Example:
+Examples:
 
 ```bash
 jam package
+jam package --output target/myapp.jar
+jam package --classes target/classes --output dist/myapp-1.0.jar
 ```
 
-Use `--` before script arguments that begin with `-` so picocli does not parse them as `jam package` options.
+Use `--` before script arguments that begin with `-` so picocli does not parse them as `jam package` options (only relevant when a `package` script is defined).
 
 ## Repository and Cache Options
 
