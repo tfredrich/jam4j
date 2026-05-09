@@ -23,6 +23,7 @@
         <maven.version>3.9.6</maven.version>
         <junit.version>5.10.2</junit.version>
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
+        <excludedGroups>integration</excludedGroups>
     </properties>
 
     <dependencies>
@@ -134,8 +135,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
-                    <!-- Run integration tests only when -Dgroups=integration -->
-                    <excludedGroups>integration</excludedGroups>
+                    <!-- Override with -DexcludedGroups= -Dgroups=integration to run integration tests -->
+                    <excludedGroups>${excludedGroups}</excludedGroups>
                 </configuration>
             </plugin>
 

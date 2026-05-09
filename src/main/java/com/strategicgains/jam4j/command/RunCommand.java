@@ -75,7 +75,7 @@ public class RunCommand implements Runnable {
 
             for (ScriptExecution exec : executions) {
                 if (!opts.quiet) System.out.println("> " + exec.name());
-                int exitCode = runner.run(exec.script(), exec.args(), workDir, classpath);
+                int exitCode = runner.run(exec.script(), exec.args(), workDir, classpath, opts.verbose);
                 if (exitCode != 0) {
                     System.err.println("Script '" + exec.name() + "' failed with exit code " + exitCode);
                     System.exit(exitCode);

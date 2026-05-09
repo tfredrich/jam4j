@@ -3,6 +3,7 @@ package com.strategicgains.jam4j.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
@@ -25,7 +26,8 @@ public class ProjectJson {
     public Map<String, String> scripts = new LinkedHashMap<>();
 
     private static final ObjectMapper MAPPER = new ObjectMapper()
-        .enable(SerializationFeature.INDENT_OUTPUT);
+        .enable(SerializationFeature.INDENT_OUTPUT)
+        .enable(JsonParser.Feature.ALLOW_COMMENTS);
 
     public static ProjectJson load(Path path) throws IOException {
         return MAPPER.readValue(path.toFile(), ProjectJson.class);
