@@ -1,7 +1,6 @@
 {
   "name" : "jam4j",
   "version" : "1.0.0-SNAPSHOT",
-  "main" : "com.strategicgains.jam4j.Jam",
   "dependencies" : {
     "info.picocli:picocli" : "4.7.6",
     "com.fasterxml.jackson.core:jackson-databind" : "2.17.1",
@@ -16,12 +15,15 @@
     "org.slf4j:slf4j-nop" : "1.7.36"
   },
   "devDependencies" : {
-    "org.junit.jupiter:junit-jupiter" : "5.10.2",
+    "org.junit.platform:junit-platform-console-standalone" : "1.10.2",
     "org.assertj:assertj-core" : "3.25.3"
   },
   "scripts" : {
+    "test" : "javac -cp {{deps:dev}} -d {{classes}} {{sources}} && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}} && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}} org.junit.platform.console.ConsoleLauncher execute --scan-classpath --disable-banner",
     // "build" : "javac -cp {{deps}} -d {{classes}} {{sources}}",
-    "test": "javac -cp {{deps:dev}} -d {{classes}} {{sources}} && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}} && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}} org.junit.platform.console.ConsoleLauncher --scan-classpath --disable-banner",
-    "clean" : "rm -rf {{output}}"
-  }
+    // "run" : "java -cp {{deps}}{:}{{classes}} {{main}}",
+    // "clean" : "rm -rf {{output}}",
+    // "package" : "<your package command>"
+  },
+  "main" : "com.strategicgains.jam4j.Jam"
 }

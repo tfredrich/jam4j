@@ -6,7 +6,6 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
-import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,7 +25,7 @@ public class InitCommand implements Callable<Integer> {
         "javac -cp {{deps:dev}} -d {{classes}} {{sources}}" +
         " && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}}" +
         " && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}" +
-        " org.junit.platform.console.ConsoleLauncher --scan-classpath --disable-banner";
+        " org.junit.platform.console.ConsoleLauncher execute --scan-classpath --disable-banner";
 
     @Option(names = {"-f", "--from"}, description = "Bootstrap project.json from a Maven pom.xml file")
     public File pomFile;
@@ -107,14 +106,8 @@ public class InitCommand implements Callable<Integer> {
     private String prompt(String label, String defaultValue, String configuredValue, Scanner scanner) {
         if (configuredValue != null) return configuredValue;
 
-        String answer;
-        Console console = System.console();
-        if (console != null) {
-            answer = console.readLine("%s%s: ", label, defaultValue.isBlank() ? "" : " (" + defaultValue + ")");
-        } else {
-            System.out.printf("%s%s: ", label, defaultValue.isBlank() ? "" : " (" + defaultValue + ")");
-            answer = scanner.nextLine();
-        }
+        System.out.printf("%s%s: ", label, defaultValue.isBlank() ? "" : " (" + defaultValue + ")");
+        String answer = scanner.nextLine();
 
         if (answer == null || answer.isBlank()) return defaultValue;
         return answer.trim();

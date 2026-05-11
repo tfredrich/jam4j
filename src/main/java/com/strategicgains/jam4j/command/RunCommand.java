@@ -143,7 +143,7 @@ public class RunCommand implements Runnable {
                 "javac -cp {{deps:dev}} -d {{classes}} {{sources}}" +
                 " && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}}" +
                 " && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}" +
-                " org.junit.platform.console.ConsoleLauncher --scan-classpath --disable-banner");
+                " org.junit.platform.console.ConsoleLauncher execute --scan-classpath --disable-banner");
         }
 
         return scripts;
