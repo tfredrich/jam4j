@@ -110,9 +110,9 @@ The optional `sourceDir`, `testDir`, and `outputDir` fields override the default
 
 ```json
 {
-  "sourceDir": "src",
-  "testDir": "test",
-  "outputDir": "build"
+  "sourceDir": "src",   // default: "src/main/java"
+  "testDir": "test",    // default: "src/test/java"
+  "outputDir": "build"  // default: "target"
 }
 ```
 
