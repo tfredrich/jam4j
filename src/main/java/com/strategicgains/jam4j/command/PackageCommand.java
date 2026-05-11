@@ -26,7 +26,7 @@ public class PackageCommand implements Runnable {
     @Option(names = {"-o", "--output"}, description = "Output JAR path (default: target/<name>-<version>.jar)")
     public Path outputPath;
 
-    @Option(names = {"--classes"}, description = "Compiled classes directory (default: target/classes)")
+    @Option(names = {"--classes"}, description = "Compiled classes directory (default: <outputDir>/classes)")
     public Path classesPath;
 
     @Parameters(description = "Arguments to pass to the package script (when a script is defined)")
@@ -55,7 +55,7 @@ public class PackageCommand implements Runnable {
 
             // Native fat JAR build
             Path outputJar = outputPath != null ? outputPath : defaultOutputJar(project, workDir);
-            Path classesDir = classesPath != null ? classesPath : workDir.resolve("target/classes");
+            Path classesDir = classesPath != null ? classesPath : workDir.resolve(project.effectiveOutputDir()).resolve("classes");
 
             if (!hasClassFiles(classesDir)) {
                 if (!opts.quiet) System.out.println("build>");

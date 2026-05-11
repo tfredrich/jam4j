@@ -1,5 +1,6 @@
 package com.strategicgains.jam4j.command;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strategicgains.jam4j.Jam;
@@ -22,7 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class InitCommandTest {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = new ObjectMapper()
+        .enable(JsonParser.Feature.ALLOW_COMMENTS)
+        .enable(JsonParser.Feature.ALLOW_TRAILING_COMMA);
 
     private PrintStream originalOut;
     private PrintStream originalErr;
@@ -61,9 +64,13 @@ class InitCommandTest {
         assertThat(project.version).isEqualTo("1.2.3");
         assertThat(project.mainClass).isEqualTo("com.example.Main");
         assertThat(project.dependencies).isEmpty();
-        assertThat(project.scripts)
-            .containsKeys("build", "test", "run", "clean")
-            .containsEntry("run", "java -cp {./target/classes}{:}{{deps}} com.example.Main");
+        assertThat(project.scripts).containsKey("test");
+
+        String json = Files.readString(target.resolve("project.json"));
+        assertThat(json).contains("// \"build\"");
+        assertThat(json).contains("// \"run\"");
+        assertThat(json).contains("// \"clean\"");
+        assertThat(json).contains("// \"package\"");
     }
 
     @Test

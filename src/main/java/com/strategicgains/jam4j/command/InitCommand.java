@@ -8,6 +8,7 @@ import picocli.CommandLine.Parameters;
 
 import java.io.Console;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -20,6 +21,12 @@ import java.util.concurrent.Callable;
     description = "Create a scaffold project.json."
 )
 public class InitCommand implements Callable<Integer> {
+
+    private static final String DEFAULT_TEST_SCRIPT =
+        "javac -cp {{deps:dev}} -d {{classes}} {{sources}}" +
+        " && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}}" +
+        " && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}" +
+        " org.junit.platform.console.ConsoleLauncher --scan-classpath --disable-banner";
 
     @Option(names = {"-f", "--from"}, description = "Bootstrap project.json from a Maven pom.xml file")
     public File pomFile;
@@ -60,16 +67,12 @@ public class InitCommand implements Callable<Integer> {
                 project.version = version != null ? version : pom.getVersion();
                 String mc = mainClass != null ? mainClass : pom.getMainClass();
                 project.mainClass = mc;
-                project.scripts.put("build", "javac -cp {{deps}} -d {./target/classes} $(find {./src/main/java} -name \"*.java\")");
-                project.scripts.put("test", "javac -cp {./target/classes}{:}{{deps}} -d {./target/test-classes} $(find {./src/test/java} -name \"*.java\")");
-                project.scripts.put("run", "java -cp {./target/classes}{:}{{deps}} " + (mc != null ? mc : "<mainClass>"));
-                project.scripts.put("clean", "rm -rf {./target/classes} {./target/test-classes}");
                 for (Map.Entry<String, String> e : pom.getDependencies().entrySet())
                     project.addDependency(e.getKey(), e.getValue());
                 for (Map.Entry<String, String> e : pom.getDevDependencies().entrySet())
                     project.addDevDependency(e.getKey(), e.getValue());
                 Files.createDirectories(projectRoot);
-                project.save(projectFile);
+                saveWithCommentedScripts(project, projectFile, testScript(pom));
                 System.out.println("Created " + projectFile);
                 return 0;
             }
@@ -86,12 +89,8 @@ public class InitCommand implements Callable<Integer> {
             project.name = prompt("name", defaultProjectName(projectRoot), projectName, scanner);
             project.version = prompt("version", "0.1.0", version, scanner);
             project.mainClass = blankToNull(prompt("main class", "", mainClass, scanner));
-            project.scripts.put("build", "javac -cp {{deps}} -d {./target/classes} {./src/main/java/Main.java}");
-            project.scripts.put("test", "java -ea -cp {./target/classes}{:}{{deps}} MainTest");
-            project.scripts.put("run", "java -cp {./target/classes}{:}{{deps}} " + (project.mainClass == null ? "Main" : project.mainClass));
-            project.scripts.put("clean", "rm -rf {./target}");
 
-            project.save(projectFile);
+            saveWithCommentedScripts(project, projectFile, DEFAULT_TEST_SCRIPT);
             System.out.println("Created " + projectFile);
             return 0;
         } catch (Exception e) {
@@ -123,5 +122,31 @@ public class InitCommand implements Callable<Integer> {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value;
+    }
+
+    private String testScript(PomReader pom) {
+        boolean junit4 = pom.getDependencies().containsKey("junit:junit")
+                      || pom.getDevDependencies().containsKey("junit:junit");
+        if (junit4) {
+            return "javac -cp {{deps:dev}} -d {./target/classes} {{sources}}" +
+                   " && javac -cp {{deps:dev}}{:}{./target/classes} -d {./target/test-classes} {{tests}}" +
+                   " && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}" +
+                   " org.junit.runner.JUnitCore {{classNames:test}}";
+        }
+        return DEFAULT_TEST_SCRIPT;
+    }
+
+    private void saveWithCommentedScripts(ProjectJson project, Path projectFile, String testScript) throws IOException {
+        String json = project.toJsonString();
+        String commentedScripts =
+            "\"scripts\" : {\n" +
+            "    \"test\" : \"" + testScript + "\",\n" +
+            "    // \"build\" : \"javac -cp {{deps}} -d {{classes}} {{sources}}\",\n" +
+            "    // \"run\" : \"java -cp {{deps}}{:}{{classes}} {{main}}\",\n" +
+            "    // \"clean\" : \"rm -rf {{output}}\",\n" +
+            "    // \"package\" : \"<your package command>\"\n" +
+            "  }";
+        json = json.replace("\"scripts\" : { }", commentedScripts);
+        Files.writeString(projectFile, json);
     }
 }

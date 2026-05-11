@@ -7,5 +7,7 @@ public record ScriptVariables(
     String devClasspath,
     Path sourceDir,
     Path testDir,
+    Path classesDir,
+    Path testClassesDir,
     String mainClass
 ) {}

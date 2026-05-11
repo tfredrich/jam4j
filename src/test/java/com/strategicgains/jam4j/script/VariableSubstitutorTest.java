@@ -16,7 +16,10 @@ class VariableSubstitutorTest {
     private final Path root = Path.of("/project");
     private final String prodCp = "/home/user/.m2/a.jar" + File.pathSeparator + "/home/user/.m2/b.jar";
     private final String devCp = prodCp + File.pathSeparator + "/home/user/.m2/test.jar";
-    private final ScriptVariables vars = new ScriptVariables(prodCp, devCp, root.resolve("src/main/java"), root.resolve("src/test/java"), "com.example.Main");
+    private final ScriptVariables vars = new ScriptVariables(prodCp, devCp,
+        root.resolve("src/main/java"), root.resolve("src/test/java"),
+        root.resolve("target/classes"), root.resolve("target/test-classes"),
+        "com.example.Main");
 
     @Test
     void replacesDepsWithProdClasspath() {
@@ -35,7 +38,9 @@ class VariableSubstitutorTest {
         Path srcDir = Files.createDirectories(tempDir.resolve("src/main/java/com/example"));
         Files.writeString(srcDir.resolve("Foo.java"), "class Foo {}");
         Files.writeString(srcDir.resolve("Bar.java"), "class Bar {}");
-        ScriptVariables v = new ScriptVariables(prodCp, devCp, tempDir.resolve("src/main/java"), tempDir.resolve("src/test/java"), null);
+        ScriptVariables v = new ScriptVariables(prodCp, devCp,
+            tempDir.resolve("src/main/java"), tempDir.resolve("src/test/java"),
+            tempDir.resolve("target/classes"), tempDir.resolve("target/test-classes"), null);
 
         String result = sub.substitute("javac {{sources}}", v, tempDir);
         assertThat(result).startsWith("javac ");
@@ -44,20 +49,66 @@ class VariableSubstitutorTest {
     }
 
     @Test
-    void replacesTestsWithJavaFiles(@TempDir Path tempDir) throws IOException {
+    void replacesSourcesTestWithJavaFiles(@TempDir Path tempDir) throws IOException {
         Path testDir = Files.createDirectories(tempDir.resolve("src/test/java/com/example"));
         Files.writeString(testDir.resolve("FooTest.java"), "class FooTest {}");
-        ScriptVariables v = new ScriptVariables(prodCp, devCp, tempDir.resolve("src/main/java"), tempDir.resolve("src/test/java"), null);
+        ScriptVariables v = new ScriptVariables(prodCp, devCp,
+            tempDir.resolve("src/main/java"), tempDir.resolve("src/test/java"),
+            tempDir.resolve("target/classes"), tempDir.resolve("target/test-classes"), null);
 
-        String result = sub.substitute("javac {{tests}}", v, tempDir);
+        String result = sub.substitute("javac {{sources:test}}", v, tempDir);
         assertThat(result).contains("FooTest.java");
     }
 
     @Test
+    void replacesClassNamesTestWithFullyQualifiedNames(@TempDir Path tempDir) throws IOException {
+        Path testDir = Files.createDirectories(tempDir.resolve("src/test/java/com/example"));
+        Files.writeString(testDir.resolve("FooTest.java"), "class FooTest {}");
+        Files.writeString(testDir.resolve("BarTest.java"), "class BarTest {}");
+        ScriptVariables v = new ScriptVariables(prodCp, devCp,
+            tempDir.resolve("src/main/java"), tempDir.resolve("src/test/java"),
+            tempDir.resolve("target/classes"), tempDir.resolve("target/test-classes"), null);
+
+        String result = sub.substitute("java {{classNames:test}}", v, tempDir);
+        assertThat(result).contains("com.example.BarTest");
+        assertThat(result).contains("com.example.FooTest");
+    }
+
+    @Test
+    void replacesClassNamesWithFullyQualifiedNames(@TempDir Path tempDir) throws IOException {
+        Path srcDir = Files.createDirectories(tempDir.resolve("src/main/java/com/example"));
+        Files.writeString(srcDir.resolve("Foo.java"), "class Foo {}");
+        Files.writeString(srcDir.resolve("Bar.java"), "class Bar {}");
+        ScriptVariables v = new ScriptVariables(prodCp, devCp,
+            tempDir.resolve("src/main/java"), tempDir.resolve("src/test/java"),
+            tempDir.resolve("target/classes"), tempDir.resolve("target/test-classes"), null);
+
+        String result = sub.substitute("java {{classNames}}", v, tempDir);
+        assertThat(result).contains("com.example.Bar");
+        assertThat(result).contains("com.example.Foo");
+    }
+
+    @Test
+    void replacesClassesWithOutputDir(@TempDir Path tempDir) {
+        ScriptVariables v = new ScriptVariables(prodCp, devCp,
+            tempDir.resolve("src/main/java"), tempDir.resolve("src/test/java"),
+            tempDir.resolve("target/classes"), tempDir.resolve("target/test-classes"), null);
+
+        assertThat(sub.substitute("-d {{classes}}", v, tempDir))
+            .isEqualTo("-d " + tempDir.resolve("target/classes"));
+        assertThat(sub.substitute("-d {{classes:test}}", v, tempDir))
+            .isEqualTo("-d " + tempDir.resolve("target/test-classes"));
+        assertThat(sub.substitute("rm -rf {{output}}", v, tempDir))
+            .isEqualTo("rm -rf " + tempDir.resolve("target"));
+    }
+
+    @Test
     void returnsEmptyForMissingSourceDir(@TempDir Path tempDir) {
-        ScriptVariables v = new ScriptVariables(prodCp, devCp, tempDir.resolve("nonexistent"), tempDir.resolve("also-nonexistent"), null);
+        ScriptVariables v = new ScriptVariables(prodCp, devCp,
+            tempDir.resolve("nonexistent"), tempDir.resolve("also-nonexistent"),
+            tempDir.resolve("target/classes"), tempDir.resolve("target/test-classes"), null);
         assertThat(sub.substitute("javac {{sources}}", v, tempDir)).isEqualTo("javac ");
-        assertThat(sub.substitute("javac {{tests}}", v, tempDir)).isEqualTo("javac ");
+        assertThat(sub.substitute("javac {{sources:test}}", v, tempDir)).isEqualTo("javac ");
     }
 
     @Test
@@ -68,7 +119,7 @@ class VariableSubstitutorTest {
 
     @Test
     void replacesMainClassWithEmptyWhenNull() {
-        ScriptVariables v = new ScriptVariables(prodCp, devCp, root.resolve("src/main/java"), root.resolve("src/test/java"), null);
+        ScriptVariables v = new ScriptVariables(prodCp, devCp, root.resolve("src/main/java"), root.resolve("src/test/java"), root.resolve("target/classes"), root.resolve("target/test-classes"), null);
         String result = sub.substitute("java {{main}}", v, root);
         assertThat(result).isEqualTo("java ");
     }
@@ -81,7 +132,7 @@ class VariableSubstitutorTest {
 
     @Test
     void replacesJarFlagsWithEmptyWhenNoMainClass() {
-        ScriptVariables v = new ScriptVariables(prodCp, devCp, root.resolve("src/main/java"), root.resolve("src/test/java"), null);
+        ScriptVariables v = new ScriptVariables(prodCp, devCp, root.resolve("src/main/java"), root.resolve("src/test/java"), root.resolve("target/classes"), root.resolve("target/test-classes"), null);
         String result = sub.substitute("jar --create {{jarflags}}", v, root);
         assertThat(result).isEqualTo("jar --create ");
     }
@@ -114,7 +165,7 @@ class VariableSubstitutorTest {
 
     @Test
     void replacesMultipleVariablesInOneScript() {
-        String script = "javac -cp {{deps}}{:}{./target/classes} -d {./target} src{/}*.java";
+        String script = "javac -cp {{deps}}{:}{{classes}} -d {{output}} src{/}*.java";
         String result = sub.substitute(script, vars, root);
         assertThat(result).doesNotContain("{{deps}}");
         assertThat(result).doesNotContain("{/}");

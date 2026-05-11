@@ -17,7 +17,12 @@ import java.util.stream.Collectors;
  *   {{deps}}          — resolved classpath of production dependencies only
  *   {{deps:dev}}      — resolved classpath of production + dev dependencies
  *   {{sources}}       — space-separated list of *.java files under sourceDir
- *   {{tests}}         — space-separated list of *.java files under testDir
+ *   {{sources:test}}  — space-separated list of *.java files under testDir
+ *   {{classNames}}    — space-separated fully-qualified class names derived from sourceDir *.java files
+ *   {{classNames:test}} — space-separated fully-qualified class names derived from testDir *.java files
+ *   {{classes}}       — compiled classes output directory (outputDir/classes)
+ *   {{classes:test}}  — compiled test classes output directory (outputDir/test-classes)
+ *   {{output}}        — project output directory (outputDir)
  *   {{main}}          — main class from project.json
  *   {{jarflags}}      — "--main-class <mainClass>" when main is set, else empty
  *   {/}               — platform file separator (\ on Windows, / on Mac/Linux)
@@ -44,14 +49,34 @@ public class VariableSubstitutor {
 
     private String resolveToken(String token, ScriptVariables vars, Path projectRoot) {
         return switch (token) {
-            case "{{deps}}"     -> vars.prodClasspath();
-            case "{{deps:dev}}" -> vars.devClasspath();
-            case "{{sources}}"  -> collectJavaFiles(projectRoot.resolve(vars.sourceDir()));
-            case "{{tests}}"    -> collectJavaFiles(projectRoot.resolve(vars.testDir()));
-            case "{{main}}"     -> vars.mainClass() != null ? vars.mainClass() : "";
-            case "{{jarflags}}" -> vars.mainClass() != null ? "--main-class " + vars.mainClass() : "";
+            case "{{deps}}"            -> vars.prodClasspath();
+            case "{{deps:dev}}"        -> vars.devClasspath();
+            case "{{sources}}"         -> collectJavaFiles(vars.sourceDir());
+            case "{{sources:test}}"    -> collectJavaFiles(vars.testDir());
+            case "{{classNames}}"      -> collectClassNames(vars.sourceDir());
+            case "{{classNames:test}}" -> collectClassNames(vars.testDir());
+            case "{{classes}}"         -> vars.classesDir().toString();
+            case "{{classes:test}}"    -> vars.testClassesDir().toString();
+            case "{{output}}"          -> vars.classesDir().getParent().toString();
+            case "{{main}}"            -> vars.mainClass() != null ? vars.mainClass() : "";
+            case "{{jarflags}}"        -> vars.mainClass() != null ? "--main-class " + vars.mainClass() : "";
             default             -> resolveSingleBraceToken(token, projectRoot);
         };
+    }
+
+    private String collectClassNames(Path srcDir) {
+        if (!Files.isDirectory(srcDir)) return "";
+        try (var stream = Files.walk(srcDir)) {
+            return stream
+                .filter(p -> p.toString().endsWith(".java"))
+                .sorted()
+                .map(p -> srcDir.relativize(p).toString()
+                    .replace(File.separator, ".")
+                    .replaceAll("\\.java$", ""))
+                .collect(Collectors.joining(" "));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private String collectJavaFiles(Path dir) {

@@ -62,11 +62,14 @@ public class RunCommand implements Runnable {
             }
 
             Path workDir = projectFile.toAbsolutePath().getParent();
+            Path outputDir = workDir.resolve(project.effectiveOutputDir());
             ScriptVariables vars = new ScriptVariables(
                 resolveProdClasspath(project),
                 resolveDevClasspath(project),
                 workDir.resolve(project.effectiveSourceDir()),
                 workDir.resolve(project.effectiveTestDir()),
+                outputDir.resolve("classes"),
+                outputDir.resolve("test-classes"),
                 project.mainClass
             );
 
@@ -117,18 +120,30 @@ public class RunCommand implements Runnable {
     }
 
     /**
-     * Returns project scripts, injecting defaults for "build" and "run" when not defined.
-     * "build" is always injected if absent. "run" is injected only when mainClass is set.
+     * Returns project scripts, injecting defaults for built-in script names when not defined.
+     * "run" is injected only when mainClass is set; all others are always injected if absent.
      */
     Map<String, String> effectiveScripts(ProjectJson project) {
         Map<String, String> scripts = new LinkedHashMap<>(project.scripts);
 
         if (!scripts.containsKey("build")) {
-            scripts.put("build", "javac -cp {{deps}} -d {./target/classes} {{sources}}");
+            scripts.put("build", "javac -cp {{deps}} -d {{classes}} {{sources}}");
         }
 
         if (project.mainClass != null && !scripts.containsKey("run")) {
-            scripts.put("run", "java -cp {{deps}}{:}{./target/classes} {{main}}");
+            scripts.put("run", "java -cp {{deps}}{:}{{classes}} {{main}}");
+        }
+
+        if (!scripts.containsKey("clean")) {
+            scripts.put("clean", "rm -rf {{output}}");
+        }
+
+        if (!scripts.containsKey("test")) {
+            scripts.put("test",
+                "javac -cp {{deps:dev}} -d {{classes}} {{sources}}" +
+                " && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}}" +
+                " && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}" +
+                " org.junit.platform.console.ConsoleLauncher --scan-classpath --disable-banner");
         }
 
         return scripts;

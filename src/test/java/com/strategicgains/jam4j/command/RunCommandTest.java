@@ -32,7 +32,7 @@ class RunCommandTest {
 
         Map<String, String> scripts = cmd().effectiveScripts(project);
         assertThat(scripts).containsKey("run");
-        assertThat(scripts.get("run")).contains("{{deps}}").contains("{{main}}");
+        assertThat(scripts.get("run")).contains("{{deps}}").contains("{{classes}}").contains("{{main}}");
     }
 
     @Test
@@ -59,7 +59,7 @@ class RunCommandTest {
 
         Map<String, String> scripts = cmd().effectiveScripts(project);
         assertThat(scripts).containsKey("build");
-        assertThat(scripts.get("build")).contains("javac").contains("{{sources}}");
+        assertThat(scripts.get("build")).contains("javac").contains("{{sources}}").contains("{{classes}}");
     }
 
     @Test

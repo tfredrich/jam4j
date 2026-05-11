@@ -27,13 +27,17 @@ public class ProjectJson {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public String testDir;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String outputDir;
+
     public Map<String, String> dependencies = new LinkedHashMap<>();
     public Map<String, String> devDependencies = new LinkedHashMap<>();
     public Map<String, String> scripts = new LinkedHashMap<>();
 
     private static final ObjectMapper MAPPER = new ObjectMapper()
         .enable(SerializationFeature.INDENT_OUTPUT)
-        .enable(JsonParser.Feature.ALLOW_COMMENTS);
+        .enable(JsonParser.Feature.ALLOW_COMMENTS)
+        .enable(JsonParser.Feature.ALLOW_TRAILING_COMMA);
 
     public static ProjectJson load(Path path) throws IOException {
         return MAPPER.readValue(path.toFile(), ProjectJson.class);
@@ -41,6 +45,10 @@ public class ProjectJson {
 
     public void save(Path path) throws IOException {
         MAPPER.writeValue(path.toFile(), this);
+    }
+
+    public String toJsonString() throws IOException {
+        return MAPPER.writeValueAsString(this);
     }
 
     /** "group:artifact": "version" entries → ["group:artifact:version", ...] */
@@ -60,6 +68,10 @@ public class ProjectJson {
 
     public String effectiveSourceDir() {
         return sourceDir != null ? sourceDir : "src/main/java";
+    }
+
+    public String effectiveOutputDir() {
+        return outputDir != null ? outputDir : "target";
     }
 
     public String effectiveTestDir() {

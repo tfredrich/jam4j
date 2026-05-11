@@ -93,10 +93,10 @@ A project manifest can declare dependencies, dev dependencies, a main class, and
     "org.junit.jupiter:junit-jupiter": "5.10.2"
   },
   "scripts": {
-    "build": "javac -cp {{deps}} -d {./target/classes} {{sources}}",
-    "run": "java -cp {{deps}}{:}{./target/classes} {{main}}",
-    "test": "javac -cp {{deps:dev}} -d {./target/test-classes} {{sources}} {{tests}} && java -cp {{deps:dev}}{:}{./target/test-classes} org.junit.platform.console.ConsoleLauncher --scan-classpath",
-    "clean": "rm -rf {./target/classes}"
+    "build": "javac -cp {{deps}} -d {{classes}} {{sources}}",
+    "run": "java -cp {{deps}}{:}{{classes}} {{main}}",
+    "test": "javac -cp {{deps:dev}} -d {{classes}} {{sources}} && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}} && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}} org.junit.platform.console.ConsoleLauncher --scan-classpath --disable-banner",
+    "clean": "rm -rf {{output}}"
   }
 }
 ```
@@ -106,12 +106,13 @@ a definition for a script name overrides the default. For example, if `build` is
 
 Dependency keys use `group:artifact`; values are versions. At runtime they are resolved as Maven coordinates such as `group:artifact:version`.
 
-The optional `sourceDir` and `testDir` fields override the default source roots used by `{{sources}}` and `{{tests}}`. Omit them to use the standard Maven layout (`src/main/java` and `src/test/java`):
+The optional `sourceDir`, `testDir`, and `outputDir` fields override the default directories. Omit them to use the standard Maven layout:
 
 ```json
 {
   "sourceDir": "src",
-  "testDir": "test"
+  "testDir": "test",
+  "outputDir": "build"
 }
 ```
 
@@ -119,16 +120,23 @@ The optional `sourceDir` and `testDir` fields override the default source roots 
 
 Scripts support cross-platform substitutions:
 
-- `{{deps}}`: resolved classpath of production dependencies only
-- `{{deps:dev}}`: resolved classpath of production + dev dependencies
-- `{{sources}}`: space-separated list of all `*.java` files under `sourceDir` (default `src/main/java`)
-- `{{tests}}`: space-separated list of all `*.java` files under `testDir` (default `src/test/java`)
-- `{{main}}`: main class from the `"main"` field in `project.json`
-- `{{jarflags}}`: `--main-class <mainClass>` when `"main"` is set, otherwise empty
-- `{/}`: platform file separator
-- `{:}`: platform path separator
-- `{~}`: user home directory
-- `{./path}`: project-relative path using platform separators
+| Token | Expands to |
+|---|---|
+| `{{deps}}` | Resolved classpath of production dependencies only |
+| `{{deps:dev}}` | Resolved classpath of production + dev dependencies |
+| `{{sources}}` | Space-separated `*.java` files under `sourceDir` (default `src/main/java`) |
+| `{{sources:test}}` | Space-separated `*.java` files under `testDir` (default `src/test/java`) |
+| `{{classNames}}` | Space-separated fully-qualified class names derived from `sourceDir` |
+| `{{classNames:test}}` | Space-separated fully-qualified class names derived from `testDir` |
+| `{{classes}}` | Compiled classes output directory (`outputDir/classes`, default `target/classes`) |
+| `{{classes:test}}` | Compiled test classes output directory (`outputDir/test-classes`, default `target/test-classes`) |
+| `{{output}}` | Project output directory (`outputDir`, default `target`) |
+| `{{main}}` | Main class from the `"main"` field in `project.json` |
+| `{{jarflags}}` | `--main-class <mainClass>` when `"main"` is set, otherwise empty |
+| `{/}` | Platform file separator |
+| `{:}` | Platform path separator |
+| `{~}` | User home directory |
+| `{./path}` | Project-relative path using platform separators |
 
 Scripts are executed through the system shell (`sh -c` on Unix/macOS, `cmd /c` on Windows), so standard shell operators such as `&&`, `||`, `;`, and pipes work exactly as they would on the command line.
 
@@ -267,12 +275,12 @@ jam path
 jam path --dev
 jam path org.junit.jupiter:junit-jupiter:5.10.2
 java -cp "$(jam path):target/classes" com.example.Main
-java -cp "$(jam path --dev):target/classes" org.junit.platform.console.ConsoleLauncher --scan-classpath
+java -cp "$(jam path --dev):target/classes:target/test-classes" org.junit.platform.console.ConsoleLauncher --scan-classpath
 ```
 
 ### `jam run [options] <script> [args...]`
 
-Executes one or more named scripts from `project.json`. Before running scripts, `jam` resolves project dependencies and makes them available via script variables: `{{deps}}` for production dependencies only, and `{{deps:dev}}` for production + dev dependencies. If no `run` script is defined but a `"main"` class is set, `jam run` synthesizes a default: `java -cp {{deps}}{:}{./target/classes} {{main}}`.
+Executes one or more named scripts from `project.json`. Before running scripts, `jam` resolves project dependencies and makes them available via script variables: `{{deps}}` for production dependencies only, and `{{deps:dev}}` for production + dev dependencies. If no `run` script is defined but a `"main"` class is set, `jam run` synthesizes a default: `java -cp {{deps}}{:}{{classes}} {{main}}`.
 
 Aliases: `r`
 
@@ -366,7 +374,7 @@ Options:
 
 - `-p, --project <file>`: project file to read, default `./project.json`
 - `-o, --output <file>`: output JAR path (default: `target/<name>-<version>.jar`)
-- `--classes <dir>`: compiled classes directory (default: `target/classes`)
+- `--classes <dir>`: compiled classes directory (default: `<outputDir>/classes`)
 
 Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
