@@ -148,6 +148,8 @@ java -jar target/jam4j-1.0.0-SNAPSHOT.jar run build -a --verbose test -a smoke
 
 ## CLI Usage
 
+NOTE: Replace `java -jar target/jam4j-1.0.0-SNAPSHOT.jar` below with `jam` if you have installed the JAR launcher.
+
 After building:
 
 ```bash

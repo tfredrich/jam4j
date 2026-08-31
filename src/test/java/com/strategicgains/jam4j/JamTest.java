@@ -33,4 +33,16 @@ class JamTest {
         assertThat(exitCode).isZero();
         assertThat(output.toString(StandardCharsets.UTF_8)).startsWith("jam ");
     }
+
+    @Test
+    void rootCommandRegistersUpgrade() {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        CommandLine commandLine = new CommandLine(new Jam());
+        commandLine.setOut(new PrintWriter(output, true, StandardCharsets.UTF_8));
+
+        int exitCode = commandLine.execute("upgrade", "--help");
+
+        assertThat(exitCode).isZero();
+        assertThat(output.toString(StandardCharsets.UTF_8)).contains("Upgrade the local jam installation");
+    }
 }

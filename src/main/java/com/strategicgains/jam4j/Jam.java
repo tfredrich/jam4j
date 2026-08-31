@@ -28,7 +28,8 @@ import java.util.jar.Manifest;
         BuildCommand.class,
         TestCommand.class,
         CleanCommand.class,
-        PackageCommand.class
+        PackageCommand.class,
+        UpgradeCommand.class
     }
 )
 public class Jam implements Runnable {
