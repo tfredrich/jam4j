@@ -158,6 +158,7 @@ java -jar target/jam4j-1.0.0-SNAPSHOT.jar install com.fasterxml.jackson.core:jac
 java -jar target/jam4j-1.0.0-SNAPSHOT.jar path
 java -jar target/jam4j-1.0.0-SNAPSHOT.jar run --list
 java -jar target/jam4j-1.0.0-SNAPSHOT.jar run build
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar upgrade
 ```
 
 Convenience commands execute matching scripts from `project.json`:
@@ -389,6 +390,20 @@ jam package --classes target/classes --output dist/myapp-1.0.jar
 ```
 
 Use `--` before script arguments that begin with `-` so picocli does not parse them as `jam package` options (only relevant when a `package` script is defined).
+
+### `jam upgrade`
+
+Checks GitHub for the latest stable jam4j release, verifies its SHA-256 checksum, and updates the installed JAR in `$JAM_HOME/bin` (default: `$HOME/.jam4j/bin`).
+
+The command requires a previously installed local installation created by `install_local.sh` or an equivalent layout containing `$HOME/bin/jam4j.jar`.
+
+The process inspects the manifest of the existing `jam4j.jar` to determine the current version.
+
+Example:
+
+```bash
+jam upgrade
+```
 
 #### Comparison with Maven Shade Plugin
 
