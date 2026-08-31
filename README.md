@@ -18,6 +18,38 @@ This repository is an early implementation. The CLI, manifest model, Maven Resol
 - Java 21
 - Maven 3.9 or newer
 
+## Install
+
+Install the latest stable release for the current user with:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tfredrich/jam4j/main/install.sh | sh
+```
+
+The installer verifies the release checksum and creates the same layout as
+`install_local.sh` under `$HOME/.jam4j`:
+
+```text
+$HOME/.jam4j/bin/jam4j.jar
+$HOME/.jam4j/bin/jam
+```
+
+Add the launcher to your PATH:
+
+```bash
+export PATH="$HOME/.jam4j/bin:$PATH"
+```
+
+Set `JAM_HOME` to install somewhere else in your user-owned filesystem.
+
+## Upgrade
+
+After installing, upgrade to the latest stable release with:
+
+```bash
+jam upgrade
+```
+
 ## Build and Test
 
 ```bash
