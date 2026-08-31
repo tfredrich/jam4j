@@ -7,7 +7,7 @@
 set -eu
 
 REPOSITORY="tfredrich/jam4j"
-RELEASES_API="https://api.github.com/repos/$REPOSITORY/releases/latest"
+LATEST_RELEASE_URL="https://github.com/$REPOSITORY/releases/latest"
 JAM_HOME="${JAM_HOME:-$HOME/.jam4j}"
 BIN_DIR="$JAM_HOME/bin"
 
@@ -26,15 +26,10 @@ esac
 [ "$JAVA_VERSION" -ge 21 ] || error "Java 21 or newer is required (found Java $JAVA_VERSION)"
 
 echo "==> Looking up the latest stable jam4j release..."
-RELEASE_JSON=$(curl -fsSL \
-    -H 'Accept: application/vnd.github+json' \
-    -H 'User-Agent: jam4j-installer' \
-    "$RELEASES_API") || error "could not query GitHub for the latest release"
-
-TAG=$(printf '%s\n' "$RELEASE_JSON" \
-    | tr ',' '\n' \
-    | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' \
-    | sed -n '1p')
+LATEST_RELEASE=$(curl -fsSL -o /dev/null -w '%{url_effective}' "$LATEST_RELEASE_URL") \
+    || error "could not query GitHub for the latest release"
+TAG=$(printf '%s\n' "$LATEST_RELEASE" \
+    | sed -n 's#^.*/releases/tag/\([^/?#]*\).*#\1#p')
 printf '%s\n' "$TAG" | grep -Eq '^v?[0-9]+\.[0-9]+\.[0-9]+$' \
     || error "GitHub returned an invalid release tag"
 
