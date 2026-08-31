@@ -32,9 +32,10 @@ RELEASE_JSON=$(curl -fsSL \
     "$RELEASES_API") || error "could not query GitHub for the latest release"
 
 TAG=$(printf '%s\n' "$RELEASE_JSON" \
-    | sed -n 's/^[[:space:]]*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' \
+    | tr ',' '\n' \
+    | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' \
     | sed -n '1p')
-printf '%s\n' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+printf '%s\n' "$TAG" | grep -Eq '^v?[0-9]+\.[0-9]+\.[0-9]+$' \
     || error "GitHub returned an invalid release tag"
 
 VERSION=${TAG#v}
