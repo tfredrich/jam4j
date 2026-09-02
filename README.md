@@ -4,9 +4,9 @@
 
 ## Goals
 
-- Manage Java dependencies from a JSON manifest instead of a Maven or Gradle build file.
-- Resolve Maven Central artifacts and transitive compile-scope dependencies.
-- Provide familiar commands such as `install`, `run`, `build`, `test`, `clean`, and `package`.
+- Manage Java dependencies from a JSON manifest instead of a verbose Maven XML or Gradle build file.
+- Resolve Maven Central artifacts and transitive compile-scope dependencies to build an executable (aka fat) JAR.
+- Provide familiar NPM-like commands such as `install`, `run`, `build`, `test`, `clean`, and `package`.
 - Support portable script definitions through variable substitution.
 
 ## Project Status
@@ -18,7 +18,7 @@ This repository is an early implementation. The CLI, manifest model, Maven Resol
 - Java 21
 - Maven 3.9 or newer
 
-## Install
+## Install Jam4J
 
 Install the latest stable release for the current user with:
 
@@ -48,65 +48,6 @@ After installing, upgrade to the latest stable release with:
 
 ```bash
 jam upgrade
-```
-
-## Build and Test
-
-```bash
-mvn test
-mvn package
-java -jar target/jam4j-1.0.0-SNAPSHOT.jar --help
-java -jar target/jam4j-1.0.0-SNAPSHOT.jar --version
-```
-
-`mvn package` builds a shaded standalone JAR with `com.strategicgains.jam4j.Jam` as the entry point. The packaged CLI reports the Maven project version and build timestamp, for example `jam 1.0.0-SNAPSHOT (build 2026-05-04T21:18:42Z)`.
-
-## Release Flow
-
-CI runs on branch pushes and pull requests. It builds the shaded JAR and smoke-tests the CLI.
-
-Versioned releases are created from Git tags. To publish a release:
-
-1. Update the Maven version in `pom.xml` from a snapshot to the release version, for example `1.0.0-SNAPSHOT` to `1.0.0`.
-2. Verify the release build locally:
-
-   ```bash
-   mvn clean package
-   java -jar target/jam4j-1.0.0.jar --version
-   ```
-
-3. Commit the release version:
-
-   ```bash
-   git add pom.xml
-   git commit -m "release: 1.0.0"
-   ```
-
-4. Create and push a matching tag:
-
-   ```bash
-   git tag v1.0.0
-   git push origin main
-   git push origin v1.0.0
-   ```
-
-   You can also push the branch and all local tags together:
-
-   ```bash
-   git push origin main --tags
-   ```
-
-The release workflow runs only for tags matching `v*`. It verifies that the tag version matches `pom.xml`, rejects `*-SNAPSHOT` versions, builds the package, and publishes a GitHub Release with:
-
-- `jam4j-<version>.jar`
-- `jam4j-<version>.jar.sha256`
-
-After publishing, bump `pom.xml` to the next development snapshot and commit it:
-
-```bash
-git add pom.xml
-git commit -m "chore: start 1.0.1-SNAPSHOT"
-git push origin main
 ```
 
 ## `project.json`
@@ -204,16 +145,93 @@ java -jar target/jam4j-1.0.0-SNAPSHOT.jar package
 
 The examples above use the shaded JAR directly. If you install or alias the JAR launcher as `jam`, replace `java -jar target/jam4j-1.0.0-SNAPSHOT.jar` with `jam`.
 
-## Command Reference
+## Command Quick-Reference
 
-The top-level command supports:
+```plaintext
+jam
+├── Global options
+│   ├── -h, --help
+│   ├── -V, --version
+│   ├── -p, --project <file>
+│   ├── --config <file>
+│   ├── -c, --cache <dir>
+│   ├── -r, --repo <url|name=url>                          (repeatable)
+│   ├── --ignore-pom-repos
+│   ├── -q, --quiet
+│   └── -v, --verbose
+│
+├── init [options] [target-directory]                      (alias: n)
+│   ├── -f, --from <file>
+│   ├── --force
+│   ├── --name <name>
+│   ├── --version <version>
+│   └── --main <class>
+│
+├── search [options] <query...>                            (alias: s)
+│   ├── -i, --interactive
+│   ├── -m, --max <count>
+│   ├── --snapshots
+│   ├── --local
+│   └── --no-central
+│
+├── install [options] [artifact...]                        (alias: i)
+│   ├── -d, --directory <dir>
+│   └── -L, --local-only
+│
+├── path [options] [artifact...]                           (alias: p)
+│   └── --dev
+│
+├── run [options] <script> [args...]                       (alias: r)
+│   ├── -l, --list
+│   └── -a, --arg <arg>
+│
+├── build [args...]
+│
+├── test [args...]
+│
+├── clean [args...]
+│
+├── package [args...]
+│   ├── -o, --output <file>
+│   └── --classes <dir>
+│
+└── upgrade                                                (stand-alone)
+```
 
-- `-h, --help`: show top-level help
-- `-V, --version`: print the CLI version and build timestamp
+### Global options
 
-Subcommands print command-specific usage when invocation fails validation, such as an unknown option or missing required argument.
+The following options apply to the overall `jam` invocation and must appear before the first command:
 
-Several commands share repository, cache, install-directory, and output options. Those shared options are documented in [Repository and Cache Options](#repository-and-cache-options).
+- `-p, --project <file>`: project file, default `./project.json`
+- `--config <file>`: user configuration file
+- `-c, --cache <dir>`: downloaded-artifact cache directory
+- `-r, --repo <url|name=url>`: additional repository; repeatable
+- `--ignore-pom-repos`: ignore repositories declared in dependency POMs
+- `-q, --quiet`: suppress non-essential output
+- `-v, --verbose`: enable verbose diagnostic output
+
+For example:
+
+```bash
+jam --quiet clean build package
+jam --project app.json --repo corp=https://repo.example install clean build package
+```
+
+### Command chaining
+
+The parameterless commands `clean`, `build`, `test`, and `package` can be chained and execute from left to right. Execution stops when a command fails. `upgrade` is standalone because it replaces the underlying jam installation.
+
+```bash
+jam clean build test package  # valid
+jam --quiet upgrade           # valid
+jam upgrade clean             # invalid
+jam clean upgrade             # invalid
+jam upgrade --quiet           # invalid: global options must come first
+```
+
+## Detailed Command Reference
+
+Subcommands print command-specific usage when invocation fails validation, such as an unknown option or missing required argument. Global options and command chaining are documented at the top of this section.
 
 ### `jam init [options] [target-directory]`
 
@@ -254,9 +272,6 @@ Options:
 - `--snapshots`: include snapshot versions
 - `--local`: include artifacts from the local Maven cache
 - `--no-central`: skip Maven Central and search only the local cache or configured repositories
-- `-p, --project <file>`: project file to update during interactive installs, default `./project.json`
-
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Examples:
 
@@ -277,9 +292,8 @@ Aliases: `i`
 
 Options:
 
-- `-p, --project <file>`: project file to read or update, default `./project.json`
-
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
+- `-d, --directory <dir>`: directory to install artifacts into
+- `-L, --local-only`: copy artifacts instead of creating symlinks
 
 Examples:
 
@@ -287,7 +301,7 @@ Examples:
 jam install
 jam install com.fasterxml.jackson.core:jackson-databind:2.17.1
 jam install -d vendor/lib org.assertj:assertj-core:3.25.3
-jam install --ignore-pom-repos com.hazelcast:hazelcast:5.5.0
+jam --ignore-pom-repos install com.hazelcast:hazelcast:5.5.0
 ```
 
 ### `jam path [options] [artifact...]`
@@ -298,10 +312,7 @@ Aliases: `p`
 
 Options:
 
-- `-p, --project <file>`: project file to read, default `./project.json`
 - `--dev`: include `devDependencies` in the classpath (production + dev)
-
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Examples:
 
@@ -322,10 +333,7 @@ Aliases: `r`
 Options:
 
 - `-l, --list`: list scripts defined in `project.json`
-- `-p, --project <file>`: project file to read, default `./project.json`
 - `-a, --arg <arg>`: pass an argument to the preceding script. This is parsed by `jam run` rather than declared as a picocli option, so it appears after a script name.
-
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Examples:
 
@@ -338,15 +346,11 @@ jam run clean build test
 
 When several script names are supplied, `jam` runs them in order. Arguments following a script are passed to that script until another known script name is encountered.
 
-### `jam build [options] [--] [args...]`
+### `jam build [args...]`
 
 Runs the `build` script from `project.json`. This is a convenience command equivalent to `jam run build`, with any supplied arguments forwarded to the script.
 
 Options:
-
-- `-p, --project <file>`: project file to read, default `./project.json`
-
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Example:
 
@@ -356,15 +360,11 @@ jam build -- --release 21
 
 Use `--` before script arguments that begin with `-` so picocli does not parse them as `jam build` options.
 
-### `jam test [options] [--] [args...]`
+### `jam test [args...]`
 
 Runs the `test` script from `project.json`. This is a convenience command equivalent to `jam run test`, with any supplied arguments forwarded to the script.
 
 Options:
-
-- `-p, --project <file>`: project file to read, default `./project.json`
-
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Example:
 
@@ -374,15 +374,11 @@ jam test smoke
 
 Use `--` before script arguments that begin with `-` so picocli does not parse them as `jam test` options.
 
-### `jam clean [options] [--] [args...]`
+### `jam clean [args...]`
 
 Runs the `clean` script from `project.json`. This is a convenience command equivalent to `jam run clean`, with any supplied arguments forwarded to the script.
 
 Options:
-
-- `-p, --project <file>`: project file to read, default `./project.json`
-
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Example:
 
@@ -407,11 +403,8 @@ Output JAR defaults to `target/<name>-<version>.jar` (using `name` and `version`
 
 Options:
 
-- `-p, --project <file>`: project file to read, default `./project.json`
 - `-o, --output <file>`: output JAR path (default: `target/<name>-<version>.jar`)
 - `--classes <dir>`: compiled classes directory (default: `<outputDir>/classes`)
-
-Also supports the shared options: `--config`, `-c, --cache`, `-d, --directory`, `-L, --local-only`, `-r, --repo`, `--ignore-pom-repos`, `-q, --quiet`, and `-v, --verbose`.
 
 Examples:
 
@@ -454,25 +447,63 @@ jam upgrade
 
 If any of these limitations matter for your project, define a `package` script in `project.json` and invoke the Maven Shade Plugin (or another tool) directly.
 
-## Repository and Cache Options
-
-Common options are available on `search`, `install`, `path`, `run`, `build`, `test`, `clean`, and `package`:
-
-- `--config <file>`: user configuration file, defaulting to `JAM_CONFIG`, `~/.jam/config.json`, or `~/.jamcfg.json`
-- `-c, --cache <dir>`: local Maven repository cache, defaulting to `JAM_CACHE` or `~/.m2/repository`
-- `-d, --directory <dir>`: install directory, defaulting to `./lib`
-- `-L, --local-only`: copy JARs instead of creating symlinks
-- `-r, --repo <url|name=url>`: add a repository
-- `--ignore-pom-repos`: strict mode; ignore repositories declared by dependency POMs and resolve only from Maven Central plus `--repo` repositories
-- `-q, --quiet` and `-v, --verbose`: control output
-
-For named repositories, credentials can be supplied with `JAM_REPO_<NAME>_USER` and `JAM_REPO_<NAME>_PASSWORD`.
-
-By default, artifact resolution follows Maven behavior and may use repositories declared in dependency POMs. Use `--ignore-pom-repos` when you want reproducible strict resolution from only Maven Central and repositories you explicitly declare:
+## Build and Test
 
 ```bash
-jam install --ignore-pom-repos --repo internal=https://repo.example.com/maven2 com.example:tool:1.0.0
-jam path --ignore-pom-repos com.hazelcast:hazelcast:5.5.0
+mvn test
+mvn package
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar --help
+java -jar target/jam4j-1.0.0-SNAPSHOT.jar --version
+```
+
+`mvn package` builds a shaded standalone JAR with `com.strategicgains.jam4j.Jam` as the entry point. The packaged CLI reports the Maven project version and build timestamp, for example `jam 1.0.0-SNAPSHOT (build 2026-05-04T21:18:42Z)`.
+
+## Release Flow
+
+CI runs on branch pushes and pull requests. It builds the shaded JAR and smoke-tests the CLI.
+
+Versioned releases are created from Git tags. To publish a release:
+
+1. Update the Maven version in `pom.xml` from a snapshot to the release version, for example `1.0.0-SNAPSHOT` to `1.0.0`.
+2. Verify the release build locally:
+
+   ```bash
+   mvn clean package
+   java -jar target/jam4j-1.0.0.jar --version
+   ```
+
+3. Commit the release version:
+
+   ```bash
+   git add pom.xml
+   git commit -m "release: 1.0.0"
+   ```
+
+4. Create and push a matching tag:
+
+   ```bash
+   git tag v1.0.0
+   git push origin main
+   git push origin v1.0.0
+   ```
+
+   You can also push the branch and all local tags together:
+
+   ```bash
+   git push origin main --tags
+   ```
+
+The release workflow runs only for tags matching `v*`. It verifies that the tag version matches `pom.xml`, rejects `*-SNAPSHOT` versions, builds the package, and publishes a GitHub Release with:
+
+- `jam4j-<version>.jar`
+- `jam4j-<version>.jar.sha256`
+
+After publishing, bump `pom.xml` to the next development snapshot and commit it:
+
+```bash
+git add pom.xml
+git commit -m "chore: start 1.0.1-SNAPSHOT"
+git push origin main
 ```
 
 ## Source Layout

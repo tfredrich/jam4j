@@ -17,6 +17,7 @@ import java.util.List;
 @Command(
     name = "install",
     aliases = {"i"},
+    mixinStandardHelpOptions = true,
     description = "Install artifacts and add them to project.json dependencies."
 )
 public class InstallCommand implements Runnable {
@@ -24,8 +25,14 @@ public class InstallCommand implements Runnable {
     @Mixin
     public CommonOptions opts;
 
-    @Option(names = {"-p", "--project"}, description = "Project file to use (default: ./project.json)")
+    @Option(names = {"-p", "--project"}, hidden = true, description = "Project file to use (default: ./project.json)")
     public Path projectFile = Path.of("project.json");
+
+    @Option(names = {"-d", "--directory"}, description = "Directory to copy artifacts to (default: ./lib)")
+    public Path installDirectory = Path.of("lib");
+
+    @Option(names = {"-L", "--local-only"}, description = "Always copy artifacts, don't try to create symlinks")
+    public boolean installLocalOnly;
 
     @Parameters(description = "Artifacts to install (format: group:artifact:version). If none, installs from project.json.")
     public List<String> artifacts;
@@ -40,7 +47,7 @@ public class InstallCommand implements Runnable {
                 if (!opts.quiet) System.out.println("Resolving " + artifacts.size() + " artifact(s)...");
                 List<File> resolved = resolver.resolve(artifacts, opts.extraRepos);
                 if (!opts.quiet) System.out.println("Resolved " + resolved.size() + " JAR(s). Installing to " + opts.libDir + "...");
-                installer.install(resolved, opts.libDir, opts.localOnly, opts.quiet);
+                installer.install(resolved, installDirectory, installLocalOnly, opts.quiet);
                 boolean updated = saveArtifactsToProject(artifacts);
                 if (updated && !opts.quiet) System.out.println("Updated " + projectFile);
             } else {
@@ -58,7 +65,7 @@ public class InstallCommand implements Runnable {
                 if (!opts.quiet) System.out.println("Installing " + coords.size() + " dependencies from " + projectFile + "...");
                 List<File> resolved = resolver.resolve(coords, opts.extraRepos);
                 if (!opts.quiet) System.out.println("Resolved " + resolved.size() + " JAR(s). Installing to " + opts.libDir + "...");
-                installer.install(resolved, opts.libDir, opts.localOnly, opts.quiet);
+                installer.install(resolved, installDirectory, installLocalOnly, opts.quiet);
             }
 
             if (!opts.quiet) System.out.println("Done.");

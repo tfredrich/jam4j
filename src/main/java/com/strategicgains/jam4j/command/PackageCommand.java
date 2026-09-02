@@ -14,13 +14,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-@Command(name = "package", description = "Build a fat JAR, or run the 'package' script if one is defined in project.json.")
+@Command(name = "package", mixinStandardHelpOptions = true,
+    description = "Build a fat JAR, or run the 'package' script if one is defined in project.json.")
 public class PackageCommand implements Runnable {
 
     @Mixin
     public CommonOptions opts;
 
-    @Option(names = {"-p", "--project"}, description = "Project file to use (default: ./project.json)")
+    @Option(names = {"-p", "--project"}, hidden = true, description = "Project file to use (default: ./project.json)")
     public Path projectFile = Path.of("project.json");
 
     @Option(names = {"-o", "--output"}, description = "Output JAR path (default: target/<name>-<version>.jar)")

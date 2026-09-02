@@ -21,6 +21,13 @@ import java.util.concurrent.Callable;
 )
 public class InitCommand implements Callable<Integer> {
 
+    @Option(names = {"-h", "--help"}, usageHelp = true,
+        description = "Show this help message and exit.")
+    public boolean helpRequested;
+
+    private static final String JUNIT_JUPITER = "org.junit.jupiter:junit-jupiter";
+    private static final String JUNIT_PLATFORM_CONSOLE = "org.junit.platform:junit-platform-console";
+
     private static final String DEFAULT_TEST_SCRIPT =
         "javac -cp {{deps:dev}} -d {{classes}} {{sources}}" +
         " && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}}" +
@@ -70,6 +77,7 @@ public class InitCommand implements Callable<Integer> {
                     project.addDependency(e.getKey(), e.getValue());
                 for (Map.Entry<String, String> e : pom.getDevDependencies().entrySet())
                     project.addDevDependency(e.getKey(), e.getValue());
+                addJUnitPlatformConsole(project, pom);
                 Files.createDirectories(projectRoot);
                 saveWithCommentedScripts(project, projectFile, testScript(pom));
                 System.out.println("Created " + projectFile);
@@ -127,6 +135,16 @@ public class InitCommand implements Callable<Integer> {
                    " org.junit.runner.JUnitCore {{classNames:test}}";
         }
         return DEFAULT_TEST_SCRIPT;
+    }
+
+    private void addJUnitPlatformConsole(ProjectJson project, PomReader pom) {
+        if (project.devDependencies.containsKey(JUNIT_PLATFORM_CONSOLE)) return;
+
+        String jupiterVersion = pom.getDevDependencies().get(JUNIT_JUPITER);
+        if (jupiterVersion != null && jupiterVersion.startsWith("5.")) {
+            project.addDevDependency(JUNIT_PLATFORM_CONSOLE,
+                "1." + jupiterVersion.substring("5.".length()));
+        }
     }
 
     private void saveWithCommentedScripts(ProjectJson project, Path projectFile, String testScript) throws IOException {

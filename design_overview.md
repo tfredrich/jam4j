@@ -256,3 +256,12 @@ Example:
   jam run --verbose debug
   jam test
 ```
+
+Global options may be placed before a command or command chain and apply to the complete invocation:
+
+```bash
+jam --quiet clean build package
+jam --project app.json --repo corp=https://repo.example install clean build package
+```
+
+The parameterless commands `clean`, `build`, `test`, and `package` can be chained and execute from left to right. Execution stops when a command fails. `upgrade` is standalone because it replaces the underlying jam installation; it cannot be combined with another command. Global options must appear before the first command, so `jam upgrade --quiet` is invalid while `jam --quiet upgrade` is valid.

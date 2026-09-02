@@ -138,4 +138,18 @@ class InitCommandTest {
         assertThat(exitCode).isZero();
         assertThat(target.resolve("project.json")).exists();
     }
+
+    @Test
+    void addsJUnitPlatformConsoleWhenBootstrappingJUnit5Project() throws Exception {
+        Path target = tempDir.resolve("maven-app");
+        Path pom = Path.of("src/test/resources/test-pom.xml");
+
+        int exitCode = new CommandLine(new InitCommand()).execute(
+            "--from", pom.toString(), target.toString());
+
+        assertThat(exitCode).isZero();
+        ProjectJson project = ProjectJson.load(target.resolve("project.json"));
+        assertThat(project.devDependencies)
+            .containsEntry("org.junit.platform:junit-platform-console", "1.11.0");
+    }
 }

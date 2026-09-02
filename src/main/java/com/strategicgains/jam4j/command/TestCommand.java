@@ -8,13 +8,14 @@ import picocli.CommandLine.Parameters;
 import java.nio.file.Path;
 import java.util.List;
 
-@Command(name = "test", description = "Execute the 'test' script defined in project.json.")
+@Command(name = "test", mixinStandardHelpOptions = true,
+    description = "Execute the 'test' script defined in project.json.")
 public class TestCommand implements Runnable {
 
     @Mixin
     public CommonOptions opts;
 
-    @Option(names = {"-p", "--project"}, description = "Project file to use (default: ./project.json)")
+    @Option(names = {"-p", "--project"}, hidden = true, description = "Project file to use (default: ./project.json)")
     public Path projectFile = Path.of("project.json");
 
     @Parameters(description = "Arguments to pass to the test script")

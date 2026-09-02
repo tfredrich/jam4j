@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
     name = "run",
     aliases = {"r"},
     description = "Execute an action script defined in project.json.",
-    mixinStandardHelpOptions = false
+    mixinStandardHelpOptions = true
 )
 public class RunCommand implements Runnable {
 
@@ -32,7 +32,7 @@ public class RunCommand implements Runnable {
     @Option(names = {"-l", "--list"}, description = "List all available scripts defined in project.json")
     public boolean list;
 
-    @Option(names = {"-p", "--project"}, description = "Project file to use (default: ./project.json)")
+    @Option(names = {"-p", "--project"}, hidden = true, description = "Project file to use (default: ./project.json)")
     public Path projectFile = Path.of("project.json");
 
     @Unmatched

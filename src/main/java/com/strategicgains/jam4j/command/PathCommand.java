@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 @Command(
     name = "path",
     aliases = {"p"},
+    mixinStandardHelpOptions = true,
     description = "Print the classpath for the specified artifacts or project.json dependencies."
 )
 public class PathCommand implements Runnable {
@@ -23,7 +24,7 @@ public class PathCommand implements Runnable {
     @Mixin
     public CommonOptions opts;
 
-    @Option(names = {"-p", "--project"}, description = "Project file to use (default: ./project.json)")
+    @Option(names = {"-p", "--project"}, hidden = true, description = "Project file to use (default: ./project.json)")
     public Path projectFile = Path.of("project.json");
 
     @Option(names = {"--dev"}, description = "Include devDependencies in the classpath (default: production only)")

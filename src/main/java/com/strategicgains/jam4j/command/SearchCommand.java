@@ -17,6 +17,7 @@ import java.util.Scanner;
 @Command(
     name = "search",
     aliases = {"s"},
+    mixinStandardHelpOptions = true,
     description = "Search for Maven artifacts in repositories."
 )
 public class SearchCommand implements Runnable {
@@ -39,7 +40,7 @@ public class SearchCommand implements Runnable {
     @Option(names = "--no-central", description = "Skip Maven Central and search only local/cache or configured repositories")
     public boolean noCentral;
 
-    @Option(names = {"-p", "--project"}, description = "Project file to use (default: ./project.json)")
+    @Option(names = {"-p", "--project"}, hidden = true, description = "Project file to use (default: ./project.json)")
     public Path projectFile = Path.of("project.json");
 
     @Parameters(description = "Partial or full artifact name to search for.", arity = "1..*")
