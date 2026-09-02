@@ -50,6 +50,18 @@ After installing, upgrade to the latest stable release with:
 jam upgrade
 ```
 
+If the installed JAR is a local development snapshot, or its version is
+greater than the latest published release, force replacement with the latest
+stable GitHub release:
+
+```bash
+jam upgrade --force
+```
+
+`--force` bypasses the version comparison, but the release must still be a
+stable GitHub release and its SHA-256 checksum must verify before the installed
+JAR is replaced.
+
 ## `project.json`
 
 A project manifest can declare dependencies, dev dependencies, a main class, and named scripts:
@@ -195,7 +207,7 @@ jam
 │   ├── -o, --output <file>
 │   └── --classes <dir>
 │
-└── upgrade                                                (stand-alone)
+└── upgrade [--force]                                      (stand-alone)
 ```
 
 ### Global options
@@ -429,6 +441,23 @@ Example:
 ```bash
 jam upgrade
 ```
+
+Options:
+
+- `--force`: download and install the latest stable GitHub release even when
+  the installed version compares as equal to or newer than that release. This
+  is intended for replacing local snapshot builds with a published release.
+
+Example:
+
+```bash
+jam upgrade --force
+```
+
+Without `--force`, an installed version that is equal to or newer than the
+latest release is left unchanged. With `--force`, the latest release asset is
+downloaded and checksum-verified before it atomically replaces the installed
+JAR.
 
 #### Comparison with Maven Shade Plugin
 

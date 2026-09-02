@@ -48,6 +48,14 @@ class JamTest {
     }
 
     @Test
+    void upgradeSupportsForceOption() {
+        CommandLine commandLine = new CommandLine(new Jam());
+
+        assertThat(commandLine.getSubcommands().get("upgrade").getCommandSpec()
+            .findOption("--force")).isNotNull();
+    }
+
+    @Test
     void parsesGlobalOptionsBeforeACommandChain() {
         Jam.Invocation invocation = Jam.Invocation.parse(new String[] {
             "--quiet", "--project", "app.json", "clean", "build", "package"

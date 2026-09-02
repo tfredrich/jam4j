@@ -1,5 +1,7 @@
 # Install jam4j locally after building the local changes.
 #
+# Uses the Maven (via pom.xml) to build the fat JAR and install it locally.
+#
 #!/usr/bin/env sh
 set -e
 

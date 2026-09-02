@@ -47,6 +47,11 @@ public class JamUpgrader {
     }
 
     public boolean upgrade(Path jamHome, String currentVersion) throws IOException, InterruptedException {
+        return upgrade(jamHome, currentVersion, false);
+    }
+
+    public boolean upgrade(Path jamHome, String currentVersion, boolean force)
+        throws IOException, InterruptedException {
         Path installedJar = jamHome.resolve("bin").resolve("jam4j.jar");
         if (!Files.isRegularFile(installedJar)) {
             throw new IOException("installed JAR not found at " + installedJar);
@@ -58,7 +63,7 @@ public class JamUpgrader {
         }
 
         String latestVersion = release.version();
-        if (SemanticVersion.compare(currentVersion, latestVersion) >= 0) {
+        if (!force && SemanticVersion.compare(currentVersion, latestVersion) >= 0) {
             System.out.println("jam is already up to date (" + currentVersion + ")");
             return true;
         }

@@ -264,4 +264,15 @@ jam --quiet clean build package
 jam --project app.json --repo corp=https://repo.example install clean build package
 ```
 
-The parameterless commands `clean`, `build`, `test`, and `package` can be chained and execute from left to right. Execution stops when a command fails. `upgrade` is standalone because it replaces the underlying jam installation; it cannot be combined with another command. Global options must appear before the first command, so `jam upgrade --quiet` is invalid while `jam --quiet upgrade` is valid.
+The parameterless commands `clean`, `build`, `test`, and `package` can be chained and execute from left to right. Execution stops when a command fails. `upgrade` is standalone because it replaces the underlying jam installation; it cannot be combined with another command. Global options must appear before the first command, so `jam upgrade --quiet` is invalid while `jam --quiet upgrade` is valid. The command-specific `jam upgrade --force` option is valid and bypasses the version comparison so a local snapshot or otherwise newer-looking installation can be replaced by the latest stable GitHub release.
+
+### Self-upgrade behavior
+
+`jam upgrade` queries GitHub's latest stable release, locates the versioned JAR
+and SHA-256 assets, downloads them into a temporary file in the installation's
+`bin` directory, verifies the checksum, and atomically replaces the installed
+JAR. Normally, the replacement occurs only when the published release is newer
+than the installed version. `jam upgrade --force` bypasses that comparison and
+always attempts to install the latest stable release. It does not bypass
+release stability checks, missing-asset checks, checksum verification, or the
+atomic replacement step.
