@@ -1,6 +1,7 @@
 {
   "name" : "jam4j",
   "version" : "1.0.3-SNAPSHOT",
+  "main" : "com.strategicgains.jam4j.Jam",
   "dependencies" : {
     "info.picocli:picocli" : "4.7.6",
     "com.fasterxml.jackson.core:jackson-databind" : "2.17.1",
@@ -20,11 +21,10 @@
     "org.junit.platform:junit-platform-console" : "1.10.2"
   },
   "scripts" : {
-    "test" : "javac -cp {{deps:dev}} -d {{classes}} {{sources}} && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}} && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}{:}{./src/test/resources} org.junit.platform.console.ConsoleLauncher execute --scan-classpath --disable-banner",
+    "test" : "javac -cp {{deps:dev}} -d {{classes}} {{sources}} && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}} && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}{:}{./src/test/resources} org.junit.platform.console.ConsoleLauncher execute --scan-classpath --disable-banner"
     // "build" : "javac -cp {{deps}} -d {{classes}} {{sources}}",
     // "run" : "java -cp {{deps}}{:}{{classes}} {{main}}",
     // "clean" : "rm -rf {{output}}",
     // "package" : "<your package command>"
-  },
-  "main" : "com.strategicgains.jam4j.Jam"
+  }
 }
