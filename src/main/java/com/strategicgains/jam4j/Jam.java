@@ -114,7 +114,7 @@ public class Jam implements Runnable {
                         } else if (arg.equals("--help") || arg.equals("-h") || arg.equals("--version") || arg.equals("-V")) {
                             return new Invocation(List.of(), List.of());
                         } else {
-                            throw new IllegalArgumentException("global option expected before command: " + arg);
+                            throw new IllegalArgumentException(commandError(arg));
                         }
                     }
                 } else if (isCommand(arg)) {
@@ -136,6 +136,14 @@ public class Jam implements Runnable {
 
         List<String> commands() {
             return commandArguments.stream().map(List::getFirst).toList();
+        }
+
+        private static String commandError(String arg) {
+            String message = "Unknown command: " + arg;
+            if (arg.equals("update")) {
+                return message + System.lineSeparator() + "Did you mean 'upgrade' instead?";
+            }
+            return message;
         }
 
         private static boolean isCommand(String arg) {

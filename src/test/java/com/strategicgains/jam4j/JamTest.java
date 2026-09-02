@@ -72,6 +72,21 @@ class JamTest {
     }
 
     @Test
+    void suggestsUpgradeWhenUpdateIsUsedAsACommand() {
+        assertThatThrownBy(() -> Jam.Invocation.parse(new String[] {"update"}))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Unknown command: update" + System.lineSeparator()
+                + "Did you mean 'upgrade' instead?");
+    }
+
+    @Test
+    void reportsUnknownCommand() {
+        assertThatThrownBy(() -> Jam.Invocation.parse(new String[] {"foo"}))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Unknown command: foo");
+    }
+
+    @Test
     void upgradeCannotBeChained() {
         assertThat(Jam.execute(new String[] {"upgrade", "clean"})).isEqualTo(2);
         assertThat(Jam.execute(new String[] {"clean", "upgrade"})).isEqualTo(2);

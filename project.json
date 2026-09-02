@@ -1,6 +1,6 @@
 {
   "name" : "jam4j",
-  "version" : "1.0.2-SNAPSHOT",
+  "version" : "1.0.3-SNAPSHOT",
   "dependencies" : {
     "info.picocli:picocli" : "4.7.6",
     "com.fasterxml.jackson.core:jackson-databind" : "2.17.1",
