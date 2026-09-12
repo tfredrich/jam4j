@@ -17,7 +17,7 @@ import java.util.jar.Manifest;
 
 @Command(
     name = "jam",
-    description = "Java Artifact Manager — npm-like dependency management for Java",
+    description = "Java Artifact Manager — simple npm-like dependency management for Java",
     mixinStandardHelpOptions = true,
     versionProvider = Jam.VersionProvider.class,
     subcommands = {
