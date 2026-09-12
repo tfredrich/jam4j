@@ -1,6 +1,6 @@
 {
   "name" : "jam4j",
-  "version" : "1.0.3-SNAPSHOT",
+  "version" : "1.0.4-SNAPSHOT",
   "main" : "com.strategicgains.jam4j.Jam",
   "dependencies" : {
     "info.picocli:picocli" : "4.7.6",
