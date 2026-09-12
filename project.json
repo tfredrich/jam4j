@@ -19,8 +19,5 @@
     "org.junit.jupiter:junit-jupiter" : "5.10.2",
     "org.assertj:assertj-core" : "3.25.3",
     "org.junit.platform:junit-platform-console" : "1.10.2"
-  },
-  "scripts" : {
-    "test" : "java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}{:}{./src/test/resources} org.junit.platform.console.ConsoleLauncher execute --scan-classpath --disable-banner"
   }
 }
