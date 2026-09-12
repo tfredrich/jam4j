@@ -29,9 +29,7 @@ public class InitCommand implements Callable<Integer> {
     private static final String JUNIT_PLATFORM_CONSOLE = "org.junit.platform:junit-platform-console";
 
     private static final String DEFAULT_TEST_SCRIPT =
-        "javac -cp {{deps:dev}} -d {{classes}} {{sources}}" +
-        " && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}}" +
-        " && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}" +
+        "java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}" +
         " org.junit.platform.console.ConsoleLauncher execute --scan-classpath --disable-banner";
 
     @Option(names = {"-f", "--from"}, description = "Bootstrap project.json from a Maven pom.xml file")
@@ -129,9 +127,7 @@ public class InitCommand implements Callable<Integer> {
         boolean junit4 = pom.getDependencies().containsKey("junit:junit")
                       || pom.getDevDependencies().containsKey("junit:junit");
         if (junit4) {
-            return "javac -cp {{deps:dev}} -d {./target/classes} {{sources}}" +
-                   " && javac -cp {{deps:dev}}{:}{./target/classes} -d {./target/test-classes} {{tests}}" +
-                   " && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}" +
+            return "java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}" +
                    " org.junit.runner.JUnitCore {{classNames:test}}";
         }
         return DEFAULT_TEST_SCRIPT;

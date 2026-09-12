@@ -127,7 +127,9 @@ public class RunCommand implements Runnable {
         Map<String, String> scripts = new LinkedHashMap<>(project.scripts);
 
         if (!scripts.containsKey("build")) {
-            scripts.put("build", "javac -cp {{deps}} -d {{classes}} {{sources}}");
+            scripts.put("build",
+                "javac -cp {{deps}} -d {{classes}} {{sources}}" +
+                " && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}}");
         }
 
         if (project.mainClass != null && !scripts.containsKey("run")) {
@@ -140,9 +142,7 @@ public class RunCommand implements Runnable {
 
         if (!scripts.containsKey("test")) {
             scripts.put("test",
-                "javac -cp {{deps:dev}} -d {{classes}} {{sources}}" +
-                " && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}}" +
-                " && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}" +
+                "java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}" +
                 " org.junit.platform.console.ConsoleLauncher execute --scan-classpath --disable-banner");
         }
 

@@ -21,10 +21,6 @@
     "org.junit.platform:junit-platform-console" : "1.10.2"
   },
   "scripts" : {
-    "test" : "javac -cp {{deps:dev}} -d {{classes}} {{sources}} && javac -cp {{deps:dev}}{:}{{classes}} -d {{classes:test}} {{sources:test}} && java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}{:}{./src/test/resources} org.junit.platform.console.ConsoleLauncher execute --scan-classpath --disable-banner"
-    // "build" : "javac -cp {{deps}} -d {{classes}} {{sources}}",
-    // "run" : "java -cp {{deps}}{:}{{classes}} {{main}}",
-    // "clean" : "rm -rf {{output}}",
-    // "package" : "<your package command>"
+    "test" : "java -cp {{deps:dev}}{:}{{classes}}{:}{{classes:test}}{:}{./src/test/resources} org.junit.platform.console.ConsoleLauncher execute --scan-classpath --disable-banner"
   }
 }
